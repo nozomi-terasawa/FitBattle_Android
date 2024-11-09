@@ -105,7 +105,6 @@ class AuthViewModel(
         viewModelScope.launch {
             DataStoreManager.getAuthToken(context).collect { token ->
                 (getApplication() as MyApplication).userToken = token
-                Log.d("result", (getApplication() as MyApplication).userToken.toString() + "aaa")
             }
         }
     }

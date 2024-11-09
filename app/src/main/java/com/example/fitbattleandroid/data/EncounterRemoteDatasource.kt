@@ -1,6 +1,5 @@
 package com.example.fitbattleandroid.data
 
-import android.util.Log
 import com.example.fitbattleandroid.data.remote.EntryGeoFenceReq
 import com.example.fitbattleandroid.data.remote.EntryGeoFenceRes
 import io.ktor.client.HttpClient
@@ -33,7 +32,6 @@ class EncounterRemoteDatasource {
         entry: EntryGeoFenceReq,
         userToken: String,
     ): EntryGeoFenceRes {
-        Log.d("entry", userToken + "受け取っているトークン")
         val res =
             client.post("http://192.168.11.3:7070/api/v1/location/geofence/entry") {
                 headers {
@@ -42,7 +40,6 @@ class EncounterRemoteDatasource {
                 contentType(ContentType.Application.Json)
                 setBody(entry)
             }
-        Log.d("result", res.toString())
         // レスポンスからボディを取得して変数に追加
         val responseBody = res.body<EntryGeoFenceRes>()
         return responseBody
