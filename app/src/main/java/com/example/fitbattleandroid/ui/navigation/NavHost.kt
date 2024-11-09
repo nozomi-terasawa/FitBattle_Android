@@ -1,8 +1,8 @@
 package com.example.fitbattleandroid.ui.navigation
 
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -36,6 +37,7 @@ import com.example.fitbattleandroid.repositoryImpl.GeofenceEntryRepositoryImpl
 import com.example.fitbattleandroid.repositoryImpl.SaveFitnessRepositoryImpl
 import com.example.fitbattleandroid.ui.screen.EncounterHistoryScreen
 import com.example.fitbattleandroid.ui.screen.FitnessMemory
+import com.example.fitbattleandroid.ui.screen.LocationRationaleScreen
 import com.example.fitbattleandroid.ui.screen.LoginScreen
 import com.example.fitbattleandroid.ui.screen.MapScreen
 import com.example.fitbattleandroid.ui.screen.RegistrationScreen
@@ -50,6 +52,8 @@ sealed class Screen(
     val route: String,
     val title: String,
 ) {
+    data object LocationPermission : Screen("location-permission", "LocationPermission")
+
     data object Map : Screen("map", "Map")
 
     data object MyData : Screen("my-data", "MyData")
@@ -74,7 +78,6 @@ val items =
 @Composable
 fun App(
     modifier: Modifier,
-    requestPermissionLauncher: ActivityResultLauncher<Array<String>>,
     mapViewModel: MapViewModel,
     backgroundPermissionGranted: MutableState<Boolean>,
     healthConnectClient: HealthConnectClient,
@@ -87,22 +90,54 @@ fun App(
         navController,
         startDestination = Screen.Top.route,
     ) {
+        val nextDestination =
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+            ) { // 正確な位置情報
+                "main"
+            } else {
+                Screen.LocationPermission.route
+            }
+
         composable(Screen.Top.route) { TopScreen(navController) }
         composable(Screen.Login.route) {
             LoginScreen(
-                navController,
+                onNavigateMain = {
+                    navController.navigate(nextDestination)
+                },
+                onNavigateRegi = {
+                    navController.navigate(Screen.Regi.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 authViewModel = authViewModel,
             )
         }
         composable(Screen.Regi.route) {
             RegistrationScreen(
-                navController,
+                onNavigateMain = {
+                    navController.navigate(nextDestination)
+                },
+                onNavigateLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 authViewModel = authViewModel,
+            )
+        }
+        composable(Screen.LocationPermission.route) {
+            LocationRationaleScreen(
+                modifier = modifier,
+                onNavigateMapScreen = {
+                    navController.navigate("main")
+                },
             )
         }
         composable("main") {
             MainNavigation(
-                requestPermissionLauncher,
                 mapViewModel,
                 dataAPIViewModel =
                     viewModel {
@@ -118,7 +153,6 @@ fun App(
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun MainNavigation(
-    requestPermissionLauncher: ActivityResultLauncher<Array<String>>,
     mapViewModel: MapViewModel,
     dataAPIViewModel: HealthDataApiViewModel,
     backgroundPermissionGranted: MutableState<Boolean>,
@@ -182,7 +216,6 @@ fun MainNavigation(
             composable(Screen.Map.route) {
                 MapScreen(
                     Modifier.padding(innerPadding),
-                    requestPermissionLauncher,
                     mapViewModel,
                     backgroundPermissionGranted,
                     healthDataApiViewModel = dataAPIViewModel,
