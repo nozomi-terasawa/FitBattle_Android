@@ -30,11 +30,13 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.Task
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 private const val TAG = "MainActivity"
 private const val PERMISSION_SETTING_TAG = "PermissionSetting"
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     companion object {
         private const val REQUEST_CHECK_SETTINGS = 1
@@ -56,6 +58,7 @@ class MainActivity : ComponentActivity() {
         }
 
     private val mapViewModel: MapViewModel by viewModels()
+
     private val backgroundPermissionGranted = mutableStateOf(false)
 
     @RequiresApi(Build.VERSION_CODES.Q)

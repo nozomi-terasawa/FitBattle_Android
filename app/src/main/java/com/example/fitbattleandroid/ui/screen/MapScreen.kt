@@ -120,13 +120,13 @@ fun MapScreen(
                     mapViewModel.addGeofence()
                     mapViewModel.registerGeofence()
                     scope.launch(Dispatchers.IO) {
-                            geofenceMapViewModel.sendGeoFenceEntryRequest(
-                                EntryGeoFenceReq(
-                                    userId = 12,
-                                    geoFenceId = 2,
-                                    entryTime = "2021-10-01T10:00:00.391Z",
-                                ),
-                            )
+                        geofenceMapViewModel.sendGeoFenceEntryRequest(
+                            EntryGeoFenceReq(
+                                userId = 12,
+                                geoFenceId = 2,
+                                entryTime = "2021-10-01T10:00:00.391Z",
+                            ),
+                        )
                     }
                 }
             },

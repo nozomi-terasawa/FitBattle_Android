@@ -109,7 +109,7 @@ fun App(
                     viewModel {
                         GeofenceMapViewModel(
                             application = context as MyApplication,
-                            GeofenceEntryRepositoryImpl(EncounterRemoteDatasource())
+                            GeofenceEntryRepositoryImpl(EncounterRemoteDatasource()),
                         )
                     },
                 backgroundPermissionGranted,

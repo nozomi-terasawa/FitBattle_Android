@@ -17,6 +17,10 @@ if (!localPropertiesFile.exists()) {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,6 +28,8 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -91,6 +97,10 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation("androidx.fragment:fragment:1.8.3")
+
+    // Dagger-Hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
 
     implementation(libs.ktor.core)
     implementation(libs.ktor.cio)
