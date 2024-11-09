@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,23 +90,6 @@ class MainActivity : ComponentActivity() {
         // 位置情報の設定を確認
         checkLocationSettings(mapViewModel)
 
-        val requestPermissionLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.RequestMultiplePermissions(),
-            ) { permissions ->
-                permissions.forEach { (permission, isGranted) ->
-                    when (permission) {
-                        android.Manifest.permission.ACCESS_FINE_LOCATION -> {
-                            Log.d(TAG, "ACCESS_FINE_LOCATION: $isGranted")
-                        }
-
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION -> {
-                            Log.d(TAG, "ACCESS_COARSE_LOCATION: $isGranted")
-                        }
-                    }
-                }
-            }
-
         enableEdgeToEdge()
         setContent {
             FitBattleAndroidTheme {
@@ -115,9 +97,7 @@ class MainActivity : ComponentActivity() {
                     modifier =
                         Modifier
                             .fillMaxSize(),
-                    requestPermissionLauncher = requestPermissionLauncher,
                     mapViewModel = mapViewModel,
-                    backgroundPermissionGranted = backgroundPermissionGranted,
                     healthConnectClient = healthConnectClient,
                 )
             }
