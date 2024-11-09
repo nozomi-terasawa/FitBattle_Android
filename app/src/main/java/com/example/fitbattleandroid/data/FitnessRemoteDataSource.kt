@@ -25,7 +25,7 @@ class FitnessRemoteDataSource {
 
     // フィットネスデータの保存リクエスト
     suspend fun sendFitnessSave(request: SaveFitnessReq) {
-        client.post("http://192.168.224.234:7070/api/v1/fitness/save") {
+        client.post("http://192.168.11.3:7070/api/v1/fitness/save") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
