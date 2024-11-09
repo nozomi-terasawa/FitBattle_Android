@@ -78,7 +78,7 @@ fun LocationRationaleScreen(
                     Spacer(modifier = Modifier.padding(20.dp))
 
                     IconAndTextRow(
-                        text = "正確な位置情報を使用します。おおよその位置情報のみが付与された場合、すれ違い機能が使用できない可能性があります。",
+                        text = "正確な位置情報を使用します。おおよその位置情報のみが付与された場合、その精度によりすれ違い機能がうまく作動しない可能性があります。",
                         icon = Icons.Default.LocationOn,
                     )
 
