@@ -5,9 +5,11 @@ import com.example.fitbattleandroid.data.remote.EntryGeoFenceRes
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -26,15 +28,17 @@ class EncounterRemoteDatasource {
         }
 
     // ジオフェンス入室リクエスト関数
-    suspend fun sendGeoFenceEntryRequest(entry: EntryGeoFenceReq): EntryGeoFenceRes {
+    suspend fun sendGeoFenceEntryRequest(
+        entry: EntryGeoFenceReq,
+        userToken: String,
+    ): EntryGeoFenceRes {
         val res =
-            client.post("http://192.168.224.234:7070/api/v1/geofence/entry") {
+            client.post("http://192.168.11.3:7070/api/v1/location/geofence/entry") {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $userToken")
+                }
                 contentType(ContentType.Application.Json)
                 setBody(entry)
-//                // TODO login/新規登録時のトークンをtokenに代入
-//                headers {
-//                    append("Authorization", "Bearer ${token}")
-//                }
             }
         // レスポンスからボディを取得して変数に追加
         val responseBody = res.body<EntryGeoFenceRes>()

@@ -91,13 +91,11 @@ class AuthViewModel(
     }
 
     // トークンの保存
-    fun saveAuthToken(
+    suspend fun saveAuthToken(
         context: Context,
         token: String,
     ) {
-        viewModelScope.launch {
-            DataStoreManager.saveAuthToken(context, token)
-        }
+        DataStoreManager.saveAuthToken(context, token)
         getAuthToken(context)
     }
 

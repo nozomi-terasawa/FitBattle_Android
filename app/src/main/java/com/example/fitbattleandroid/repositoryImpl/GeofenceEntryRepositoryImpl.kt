@@ -8,6 +8,8 @@ import com.example.fitbattleandroid.repository.GeofenceEntryRepository
 class GeofenceEntryRepositoryImpl(
     private val remoteDatasource: EncounterRemoteDatasource,
 ) : GeofenceEntryRepository {
-    override suspend fun sendGeofenceEntryRequest(entryGeofenceReq: EntryGeoFenceReq): EntryGeoFenceRes =
-        remoteDatasource.sendGeoFenceEntryRequest(entryGeofenceReq)
+    override suspend fun sendGeofenceEntryRequest(
+        entryGeofenceReq: EntryGeoFenceReq,
+        userToken: String,
+    ): EntryGeoFenceRes = remoteDatasource.sendGeoFenceEntryRequest(entryGeofenceReq, userToken)
 }

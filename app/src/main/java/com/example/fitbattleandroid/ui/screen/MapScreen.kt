@@ -40,7 +40,7 @@ import com.example.fitbattleandroid.ui.dialog.RequestLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.UpdateLocationPermissionDialog
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
-import com.example.fitbattleandroid.viewmodel.HealthDataApiViewModel
+import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
 import com.example.fitbattleandroid.viewmodel.MapViewModel
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.Priority
@@ -60,10 +60,10 @@ private const val TAG = "MapScreen"
 fun MapScreen(
     modifier: Modifier,
     mapViewModel: MapViewModel,
-    healthDataApiViewModel: HealthDataApiViewModel,
+    geofenceMapViewModel: GeofenceMapViewModel,
 ) {
-    val context = LocalContext.current
     val locationData = mapViewModel.location.collectAsState().value
+    val context = LocalContext.current
     val geofenceList = mapViewModel.geofenceList
     val scope = rememberCoroutineScope()
     val currentLocation = remember { mutableStateOf(locationData) }
@@ -201,14 +201,13 @@ fun MapScreen(
                     mapViewModel.addGeofence()
                     mapViewModel.registerGeofence()
                     scope.launch(Dispatchers.IO) {
-                        val response =
-                            healthDataApiViewModel.sendGeoFenceEntryRequest(
-                                EntryGeoFenceReq(
-                                    userId = 12,
-                                    geoFenceId = 2,
-                                    entryTime = "2021-10-01T10:00:00.391Z",
-                                ),
-                            )
+                        geofenceMapViewModel.sendGeoFenceEntryRequest(
+                            EntryGeoFenceReq(
+                                userId = 12,
+                                geoFenceId = 2,
+                                entryTime = "2021-10-01T10:00:00.391Z",
+                            ),
+                        )
                     }
                 }
             },

@@ -64,11 +64,13 @@ fun LoginScreen(
                             when (authResult) {
                                 is AuthState.Loading -> {}
                                 is AuthState.Success -> {
-                                    authViewModel.saveAuthToken(
-                                        context,
-                                        authResult.token,
-                                    )
-                                    onNavigateMain()
+                                    scope.launch {
+                                        authViewModel.saveAuthToken(
+                                            context,
+                                            authResult.token,
+                                        )
+                                        onNavigateMain()
+                                    }
                                 }
                                 is AuthState.Error -> {}
                                 else -> {}

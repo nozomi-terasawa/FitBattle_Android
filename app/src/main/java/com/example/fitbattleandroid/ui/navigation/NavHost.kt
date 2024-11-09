@@ -16,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,6 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.fitbattleandroid.MyApplication
 import com.example.fitbattleandroid.data.EncounterRemoteDatasource
 import com.example.fitbattleandroid.data.FitnessRemoteDataSource
 import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
@@ -43,8 +43,8 @@ import com.example.fitbattleandroid.ui.screen.MapScreen
 import com.example.fitbattleandroid.ui.screen.RegistrationScreen
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
 import com.example.fitbattleandroid.viewmodel.AuthViewModel
+import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
 import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
-import com.example.fitbattleandroid.viewmodel.HealthDataApiViewModel
 import com.example.fitbattleandroid.viewmodel.MapViewModel
 import com.websarva.wings.android.myapplication.TopScreen
 
@@ -145,9 +145,12 @@ fun App(
         composable("main") {
             MainNavigation(
                 mapViewModel,
-                dataAPIViewModel =
+                geofenceMapViewModel =
                     viewModel {
-                        HealthDataApiViewModel(GeofenceEntryRepositoryImpl(EncounterRemoteDatasource()))
+                        GeofenceMapViewModel(
+                            application = context as MyApplication,
+                            GeofenceEntryRepositoryImpl(EncounterRemoteDatasource()),
+                        )
                     },
                 healthConnectClient,
             )
@@ -159,7 +162,7 @@ fun App(
 @Composable
 fun MainNavigation(
     mapViewModel: MapViewModel,
-    dataAPIViewModel: HealthDataApiViewModel,
+    geofenceMapViewModel: GeofenceMapViewModel,
     healthConnectClient: HealthConnectClient,
 ) {
     val navController = rememberNavController()
@@ -230,7 +233,7 @@ fun MainNavigation(
                 MapScreen(
                     Modifier.padding(innerPadding),
                     mapViewModel,
-                    healthDataApiViewModel = dataAPIViewModel,
+                    geofenceMapViewModel = geofenceMapViewModel,
                 )
             }
             composable(Screen.MyData.route) {
@@ -246,7 +249,7 @@ fun MainNavigation(
                 )
             }
             composable(Screen.EncounterList.route) {
-                val geofenceEntryState = dataAPIViewModel.geofenceEntryState.collectAsState().value
+                val geofenceEntryState = geofenceMapViewModel.geofenceEntryState.collectAsState().value
 
                 EncounterHistoryScreen(
                     modifier = Modifier,

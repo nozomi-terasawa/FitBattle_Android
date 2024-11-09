@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.fitbattleandroid.MyApplication
 import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
 import com.example.fitbattleandroid.ui.common.Background
 import com.example.fitbattleandroid.ui.common.Body
@@ -33,6 +34,7 @@ fun RegistrationScreen(
 ) {
     val registerState = authViewModel.registerState
     val context = LocalContext.current
+    val applicationContext = context.applicationContext as MyApplication
     val scope = rememberCoroutineScope()
 
     Background {
@@ -75,11 +77,13 @@ fun RegistrationScreen(
                                 )
                             when (authResult) {
                                 is AuthState.Success -> {
-                                    authViewModel.saveAuthToken(
-                                        context,
-                                        authResult.token,
-                                    )
-                                    onNavigateMain()
+                                    scope.launch {
+                                        authViewModel.saveAuthToken(
+                                            applicationContext,
+                                            authResult.token,
+                                        )
+                                        onNavigateMain()
+                                    }
                                 }
                                 else -> {}
                             }
