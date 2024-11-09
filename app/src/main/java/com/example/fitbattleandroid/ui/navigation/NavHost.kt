@@ -24,12 +24,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import com.example.fitbattleandroid.data.EncounterRemoteDatasource
 import com.example.fitbattleandroid.data.FitnessRemoteDataSource
 import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
@@ -38,6 +41,7 @@ import com.example.fitbattleandroid.repositoryImpl.SaveFitnessRepositoryImpl
 import com.example.fitbattleandroid.ui.screen.EncounterHistoryScreen
 import com.example.fitbattleandroid.ui.screen.FitnessMemory
 import com.example.fitbattleandroid.ui.screen.LocationRationaleScreen
+import com.example.fitbattleandroid.ui.screen.LocationRationaleScreenPreview
 import com.example.fitbattleandroid.ui.screen.LoginScreen
 import com.example.fitbattleandroid.ui.screen.MapScreen
 import com.example.fitbattleandroid.ui.screen.RegistrationScreen
@@ -90,14 +94,11 @@ fun App(
         navController,
         startDestination = Screen.Top.route,
     ) {
-        val nextDestination =
-            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED
-            ) { // 正確な位置情報
-                "main"
-            } else {
-                Screen.LocationPermission.route
-            }
+        val nextDestination = if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) { // 正確な位置情報
+            "main"
+        } else {
+            Screen.LocationPermission.route
+        }
 
         composable(Screen.Top.route) { TopScreen(navController) }
         composable(Screen.Login.route) {
@@ -213,6 +214,15 @@ fun MainNavigation(
             startDestination = Screen.Map.route,
             Modifier.padding(innerPadding),
         ) {
+            composable(Screen.LocationPermission.route) {
+                LocationRationaleScreen(
+                    modifier = Modifier,
+                    onNavigateMapScreen = {
+                        navController.navigate("main")
+                    },
+                )
+            }
+
             composable(Screen.Map.route) {
                 MapScreen(
                     Modifier.padding(innerPadding),
