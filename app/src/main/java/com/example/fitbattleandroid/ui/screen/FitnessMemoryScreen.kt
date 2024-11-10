@@ -1,5 +1,6 @@
 package com.example.fitbattleandroid.ui.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,9 +37,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import com.example.fitbattleandroid.data.FitnessRemoteDataSource
 import com.example.fitbattleandroid.repositoryImpl.SaveFitnessRepositoryImpl
 import com.example.fitbattleandroid.ui.common.ShowCurrentTimeAndRemainingTime
+import com.example.fitbattleandroid.ui.dialog.HealthConnectPermissionDialog
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
 import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
@@ -68,6 +73,24 @@ fun FitnessMemory(
     val endLocalDateTime = LocalDateTime.now()
     val endEpochMilli = endLocalDateTime.toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
 
+    val permissions =
+        setOf(
+            HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+        )
+
+    val showHealthConnectDialog = remember { mutableStateOf(false) }
+
+    val healthConnectPermissionLauncher =
+        rememberLauncherForActivityResult(
+            PermissionController.createRequestPermissionResultContract(),
+        ) { isGranted ->
+            if (isGranted.containsAll(permissions)) {
+            } else {
+                // 権限が拒否された場合
+                showHealthConnectDialog.value = true
+            }
+        }
+
     Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -76,6 +99,29 @@ fun FitnessMemory(
                 .fillMaxSize()
                 .imePadding(),
     ) {
+        LaunchedEffect(Unit) {
+            val granted = healthConnectClient.permissionController.getGrantedPermissions()
+
+            if (granted.containsAll(permissions)) {
+                calorieViewModel.readCalorie(
+                    healthConnectClient = healthConnectClient,
+                    startTime = Instant.ofEpochMilli(startEpochMilli),
+                    endTime = Instant.ofEpochMilli(endEpochMilli),
+                )
+            } else {
+                healthConnectPermissionLauncher.launch(permissions)
+            }
+        }
+
+        if (showHealthConnectDialog.value) {
+            HealthConnectPermissionDialog(
+                openDialog = true,
+                setShowDialog = { boolean ->
+                    showHealthConnectDialog.value = boolean
+                },
+            )
+        }
+
         Box(
             modifier =
                 Modifier
@@ -125,14 +171,6 @@ fun FitnessMemory(
                     currentCalorieStr = currentCalorieStr,
                     // .padding(90.dp)
                 )
-
-                LaunchedEffect(Unit) {
-                    calorieViewModel.readCalorie(
-                        healthConnectClient = healthConnectClient,
-                        startTime = Instant.ofEpochMilli(startEpochMilli),
-                        endTime = Instant.ofEpochMilli(endEpochMilli),
-                    )
-                }
             }
 
             Column(
@@ -270,11 +308,6 @@ fun CalorieMeter(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             FireAnimeModule()
-//            Image(
-//                painter = painterResource(id = R.drawable.pngtreeburning_fire_5637806),
-//                contentDescription = null,
-//                modifier = Modifier.size(150.dp),
-//            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
