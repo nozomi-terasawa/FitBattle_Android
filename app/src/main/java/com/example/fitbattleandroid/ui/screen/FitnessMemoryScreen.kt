@@ -1,20 +1,29 @@
 package com.example.fitbattleandroid.ui.screen
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -63,9 +72,11 @@ fun FitnessMemory(
     healthConnectClient: HealthConnectClient,
     calorieViewModel: HealthConnectViewModel,
 ) {
+    val context = LocalContext.current
     val calorieUiState by remember { mutableStateOf(calorieViewModel.calorieUiState) }
     val currentCalorieStr = calorieUiState.value.calorie
     val scope = rememberCoroutineScope()
+    val showDropdown = remember { mutableStateOf(false) }
 
     // 取得開始時間
     val startLocalDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT) // 　今日の0時から
@@ -207,12 +218,64 @@ fun FitnessMemory(
             }
         },
         actions = {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = null,
-                    tint = onPrimaryDark,
-                )
+            Row(modifier = Modifier) {
+                Box {
+                    IconButton(
+                        onClick = { showDropdown.value = true },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Settings",
+                            tint = onPrimaryDark,
+                        )
+                    }
+                    DropdownMenu(
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                        expanded = showDropdown.value,
+                        onDismissRequest = { showDropdown.value = false },
+                    ) {
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                )
+                            },
+                            onClick = {
+                                val intent =
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.parse("package:${context.packageName}")
+                                    }
+                                context.startActivity(intent)
+                                showDropdown.value = false
+                            },
+                            text = {
+                                Text(
+                                    text = "ヘルスコネクトの権限",
+                                )
+                            },
+                        )
+
+                        Divider()
+
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Settings",
+                                )
+                            },
+                            onClick = {
+                                showDropdown.value = false
+                            },
+                            text = {
+                                Text(
+                                    text = "ヘルスデータの共有",
+                                )
+                            },
+                        )
+                    }
+                }
             }
         },
     )
