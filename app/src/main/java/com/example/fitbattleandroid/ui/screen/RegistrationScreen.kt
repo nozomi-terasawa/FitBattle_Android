@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.example.fitbattleandroid.MyApplication
 import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
 import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Body
 import com.example.fitbattleandroid.ui.common.CommonOutlinedTextField
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.common.MinText
@@ -38,8 +37,8 @@ fun RegistrationScreen(
     val scope = rememberCoroutineScope()
 
     Background {
-        Header {
-            Body {
+        Header(
+            content = {
                 TitleText("新規登録")
 
                 Spacer(modifier = Modifier.size(50.dp))
@@ -85,6 +84,7 @@ fun RegistrationScreen(
                                         onNavigateMain()
                                     }
                                 }
+
                                 else -> {}
                             }
                         }
@@ -98,8 +98,9 @@ fun RegistrationScreen(
                 ) {
                     MinText("登録済みの方はこちら")
                 }
-            }
-        }
+            },
+            actions = {},
+        )
     }
 }
 

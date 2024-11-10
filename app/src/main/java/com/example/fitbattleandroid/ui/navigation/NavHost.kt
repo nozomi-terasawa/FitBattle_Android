@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -144,6 +146,7 @@ fun App(
         }
         composable("main") {
             MainNavigation(
+                modifier = Modifier.fillMaxHeight(),
                 mapViewModel,
                 geofenceMapViewModel =
                     viewModel {
@@ -161,6 +164,7 @@ fun App(
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun MainNavigation(
+    modifier: Modifier,
     mapViewModel: MapViewModel,
     geofenceMapViewModel: GeofenceMapViewModel,
     healthConnectClient: HealthConnectClient,
@@ -218,11 +222,11 @@ fun MainNavigation(
         NavHost(
             navController,
             startDestination = Screen.Map.route,
-            Modifier.padding(innerPadding),
+            modifier = modifier,
         ) {
             composable(Screen.LocationPermission.route) {
                 LocationRationaleScreen(
-                    modifier = Modifier,
+                    modifier = modifier,
                     onNavigateMapScreen = {
                         navController.navigate("main")
                     },
@@ -231,14 +235,17 @@ fun MainNavigation(
 
             composable(Screen.Map.route) {
                 MapScreen(
-                    Modifier.padding(innerPadding),
+                    modifier =
+                        modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
                     mapViewModel,
                     geofenceMapViewModel = geofenceMapViewModel,
                 )
             }
             composable(Screen.MyData.route) {
                 FitnessMemory(
-                    modifier = Modifier,
+                    modifier = modifier,
                     healthConnectClient,
                     calorieViewModel =
                         HealthConnectViewModel(
@@ -252,7 +259,7 @@ fun MainNavigation(
                 val geofenceEntryState = geofenceMapViewModel.geofenceEntryState.collectAsState().value
 
                 EncounterHistoryScreen(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxSize(),
                     geofenceEntryState = geofenceEntryState,
                 )
             }

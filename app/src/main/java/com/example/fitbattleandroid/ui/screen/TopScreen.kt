@@ -20,25 +20,28 @@ import com.example.fitbattleandroid.ui.common.NormalText
 @Composable
 fun TopScreen(navController: NavController) {
     Background {
-        Header {
-            Image(
-                painter = painterResource(R.drawable.title),
-                contentDescription = null,
-                modifier = Modifier.size(500.dp),
-            )
+        Header(
+            content = {
+                Image(
+                    painter = painterResource(R.drawable.title),
+                    contentDescription = null,
+                    modifier = Modifier.size(400.dp),
+                )
 
-            Column {
-                NormalBottom({ navController.navigate("login") }) {
-                    NormalText("ログイン")
+                Column {
+                    NormalBottom({ navController.navigate("login") }) {
+                        NormalText("ログイン")
+                    }
+
+                    Spacer(modifier = Modifier.size(20.dp))
+
+                    NormalBottom({ navController.navigate("regi") }) {
+                        NormalText("登録する")
+                    }
                 }
-
-                Spacer(modifier = Modifier.size(20.dp))
-
-                NormalBottom({ navController.navigate("regi") }) {
-                    NormalText("登録する")
-                }
-            }
-        }
+            },
+            actions = {},
+        )
     }
 }
 

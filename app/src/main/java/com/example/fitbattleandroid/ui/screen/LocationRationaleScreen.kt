@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fitbattleandroid.R
 import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Body
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.common.NormalBottom
 
@@ -40,8 +39,8 @@ fun LocationRationaleScreen(
         }
 
     Background {
-        Header {
-            Body {
+        Header(
+            content = {
                 Column(
                     modifier =
                         modifier
@@ -106,8 +105,9 @@ fun LocationRationaleScreen(
                         )
                     }
                 }
-            }
-        }
+            },
+            actions = {},
+        )
     }
 }
 
