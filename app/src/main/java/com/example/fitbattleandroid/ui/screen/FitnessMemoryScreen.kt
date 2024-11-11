@@ -51,10 +51,12 @@ import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import com.example.fitbattleandroid.data.FitnessRemoteDataSource
+import com.example.fitbattleandroid.data.datastore.DataStoreManager
 import com.example.fitbattleandroid.repositoryImpl.SaveFitnessRepositoryImpl
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.common.ShowCurrentTimeAndRemainingTime
 import com.example.fitbattleandroid.ui.dialog.HealthConnectPermissionDialog
+import com.example.fitbattleandroid.ui.dialog.ShareHealthDialog
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
 import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
@@ -92,6 +94,8 @@ fun FitnessMemory(
         )
 
     val showHealthConnectDialog = remember { mutableStateOf(false) }
+    val showShareHealthDialog = remember { mutableStateOf(false) }
+    val shareHealthDataPermission = remember { mutableStateOf(false) }
 
     val healthConnectPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -106,6 +110,25 @@ fun FitnessMemory(
 
     Header(
         content = {
+            if (showShareHealthDialog.value) {
+                ShareHealthDialog(
+                    onDismissRequest = {
+                        showShareHealthDialog.value = false
+                    },
+                    onConfirm = {
+                        scope.launch {
+                            // DataStoreに保存
+                            DataStoreManager.saveShareHealthDataAllowed(context, shareHealthDataPermission.value)
+                        }
+                        showShareHealthDialog.value = false
+                    },
+                    shareHealthDataPermission = shareHealthDataPermission.value,
+                    setShareHealthDataPermission = { boolean ->
+                        shareHealthDataPermission.value = boolean
+                    },
+                )
+            }
+
             Column(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -266,6 +289,7 @@ fun FitnessMemory(
                                 )
                             },
                             onClick = {
+                                showShareHealthDialog.value = true
                                 showDropdown.value = false
                             },
                             text = {
