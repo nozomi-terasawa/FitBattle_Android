@@ -11,7 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
 import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Body
 import com.example.fitbattleandroid.ui.common.CommonOutlinedTextField
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.common.MinText
@@ -35,8 +34,8 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
 
     Background {
-        Header {
-            Body {
+        Header(
+            content = {
                 TitleText("ログイン")
 
                 Spacer(modifier = Modifier.size(50.dp))
@@ -60,7 +59,8 @@ fun LoginScreen(
                 NormalBottom(
                     onClick = {
                         scope.launch {
-                            val authResult = authViewModel.login(authViewModel.loginState.toUserLoginReq())
+                            val authResult =
+                                authViewModel.login(authViewModel.loginState.toUserLoginReq())
                             when (authResult) {
                                 is AuthState.Loading -> {}
                                 is AuthState.Success -> {
@@ -72,6 +72,7 @@ fun LoginScreen(
                                         onNavigateMain()
                                     }
                                 }
+
                                 is AuthState.Error -> {}
                                 else -> {}
                             }
@@ -86,8 +87,9 @@ fun LoginScreen(
                 ) {
                     MinText("新規登録の方はこちら")
                 }
-            }
-        }
+            },
+            actions = {},
+        )
     }
 }
 

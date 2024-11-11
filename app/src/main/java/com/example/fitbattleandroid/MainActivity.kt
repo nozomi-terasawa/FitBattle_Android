@@ -15,10 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.PermissionController
-import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
-import androidx.lifecycle.lifecycleScope
 import com.example.fitbattleandroid.ui.navigation.App
 import com.example.fitbattleandroid.ui.screen.isBackgroundLocationPermissionGranted
 import com.example.fitbattleandroid.ui.theme.FitBattleAndroidTheme
@@ -30,7 +26,6 @@ import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 private const val TAG = "MainActivity"
 private const val PERMISSION_SETTING_TAG = "PermissionSetting"
@@ -42,19 +37,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val providerPackageName: String = "com.google.android.apps.healthdata"
-    private val permissions =
-        setOf(
-            HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
-        )
-    private val requestPermissionActivityContract = PermissionController.createRequestPermissionResultContract()
-    private val requestPermissions =
-        registerForActivityResult(requestPermissionActivityContract) { isGranted ->
-            if (isGranted.containsAll(permissions)) {
-                // パーミッションが許可された場合の処理
-            } else {
-                // パーミッションが許可されなかった場合の処理
-            }
-        }
 
     private val mapViewModel: MapViewModel by viewModels()
 
@@ -85,11 +67,6 @@ class MainActivity : ComponentActivity() {
         }
         val healthConnectClient = HealthConnectClient.getOrCreate(this)
 
-        // 権限のリクエスト
-        lifecycleScope.launch {
-            checkPermissionsAndRun(healthConnectClient)
-        }
-
         // 位置情報の設定を確認
         checkLocationSettings(mapViewModel)
 
@@ -104,15 +81,6 @@ class MainActivity : ComponentActivity() {
                     healthConnectClient = healthConnectClient,
                 )
             }
-        }
-    }
-
-    private suspend fun checkPermissionsAndRun(healthConnectClient: HealthConnectClient) {
-        val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        if (granted.containsAll(permissions)) {
-            // 権限はすでに付与されているため、データの挿入または読み取りを続行する
-        } else {
-            requestPermissions.launch(permissions)
         }
     }
 

@@ -8,17 +8,9 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,15 +18,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.fitbattleandroid.data.remote.EntryGeoFenceReq
 import com.example.fitbattleandroid.model.LocationData
+import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.dialog.RequestBackgroundLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.RequestLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.UpdateLocationPermissionDialog
@@ -75,165 +65,146 @@ fun MapScreen(
     val accessCoarseLocationState = remember { mutableStateOf(false) }
     val backgroundPermissionGranted = remember { mutableStateOf(false) }
 
-    if (accessCoarseLocationState.value || accessFineLocationState.value) {
-        LaunchedEffect(Unit) {
-            scope.launch(Dispatchers.IO) {
-                currentLocation.value = mapViewModel.fetchLocation()
-            }
-        }
-    }
-
-    val locationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions(),
-        ) { permissions ->
-            when {
-                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                    Log.d(TAG, "正確な位置情報の権限が許可されました")
-                    showRequestBackgroundPermissionDialog.value = true
-                }
-
-                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                    Log.d(TAG, "おおよその位置情報の権限が許可されました")
-                    showUpgradeToPreciseLocationDialog.value = true
-                }
-
-                else -> {
-                    Log.d(TAG, "どちらの位置情報権限も拒否されました")
-                    showRequestLocationPermissionDialog.value = true
-                }
-            }
-        }
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .imePadding(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        LaunchedEffect(Unit) {
-            accessCoarseLocationState.value =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                ) == PackageManager.PERMISSION_GRANTED
-
-            accessFineLocationState.value =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                ) == PackageManager.PERMISSION_GRANTED
-
-            backgroundPermissionGranted.value =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                ) == PackageManager.PERMISSION_GRANTED
-
-            val locationPriority =
-                if (accessFineLocationState.value) {
-                    Priority.PRIORITY_HIGH_ACCURACY
-                } else {
-                    Priority.PRIORITY_BALANCED_POWER_ACCURACY
-                }
-
-            mapViewModel.updatePriority(locationPriority)
-
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                ),
-            )
-        }
-
-        // TODO ダイアログはonResumeに移した方がいいかも？ReCompose時に毎回表示されてしまう
-        // システムダイアログで権限を拒否された時に表示するダイアログ
-        if (showRequestLocationPermissionDialog.value) {
-            RequestLocationPermissionDialog(
-                openDialog = showRequestLocationPermissionDialog.value,
-                setShowDialog = { boolean ->
-                    showRequestLocationPermissionDialog.value = boolean
-                },
-            )
-        }
-
-        // システムダイアログでおおよその位置情報の権限が許可された時に表示するダイアログ
-        if (showUpgradeToPreciseLocationDialog.value) {
-            UpdateLocationPermissionDialog(
-                openDialog = showUpgradeToPreciseLocationDialog.value,
-                setShowDialog = { boolean ->
-                    showUpgradeToPreciseLocationDialog.value = boolean
-                },
-            )
-        }
-
-        // システムダイアログでバックグラウンドの権限がを求めるダイアログ
-        if (showRequestBackgroundPermissionDialog.value && !backgroundPermissionGranted.value) {
-            RequestBackgroundLocationPermissionDialog(
-                openDialog = showRequestBackgroundPermissionDialog.value,
-                setShowDialog = { boolean ->
-                    showRequestBackgroundPermissionDialog.value = boolean
-                },
-            )
-        }
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(primaryContainerDarkMediumContrast)
-                    .padding(16.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "Share Fit",
-                style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = onPrimaryDark,
-                    ),
-            )
-        }
-        Button(
-            onClick = {
-                if (backgroundPermissionGranted.value) {
-                    mapViewModel.addGeofence()
-                    mapViewModel.registerGeofence()
+    Header(
+        content = {
+            if (accessCoarseLocationState.value || accessFineLocationState.value) {
+                LaunchedEffect(Unit) {
                     scope.launch(Dispatchers.IO) {
-                        geofenceMapViewModel.sendGeoFenceEntryRequest(
-                            EntryGeoFenceReq(
-                                userId = 12,
-                                geoFenceId = 2,
-                                entryTime = "2021-10-01T10:00:00.391Z",
-                            ),
-                        )
+                        currentLocation.value = mapViewModel.fetchLocation()
                     }
                 }
-            },
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = primaryContainerDarkMediumContrast,
-                ),
-        ) {
-            Text(
-                text = "ジオフェンスを追加",
-                color = onPrimaryDark,
-            )
-        }
+            }
 
-        ShowMap(
-            modifier = Modifier.fillMaxSize(),
-            locationData =
-                LocationData(
-                    currentLocation.value.latitude,
-                    currentLocation.value.longitude,
-                    0,
-                ),
-            geofenceList = geofenceList.toList(),
-            permissionState = accessFineLocationState.value || accessCoarseLocationState.value,
-        )
-    }
+            val locationPermissionLauncher =
+                rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestMultiplePermissions(),
+                ) { permissions ->
+                    when {
+                        permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                            Log.d(TAG, "正確な位置情報の権限が許可されました")
+                            showRequestBackgroundPermissionDialog.value = true
+                        }
+
+                        permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                            Log.d(TAG, "おおよその位置情報の権限が許可されました")
+                            showUpgradeToPreciseLocationDialog.value = true
+                        }
+
+                        else -> {
+                            Log.d(TAG, "どちらの位置情報権限も拒否されました")
+                            showRequestLocationPermissionDialog.value = true
+                        }
+                    }
+                }
+
+            LaunchedEffect(Unit) {
+                accessCoarseLocationState.value =
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                accessFineLocationState.value =
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                backgroundPermissionGranted.value =
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                val locationPriority =
+                    if (accessFineLocationState.value) {
+                        Priority.PRIORITY_HIGH_ACCURACY
+                    } else {
+                        Priority.PRIORITY_BALANCED_POWER_ACCURACY
+                    }
+
+                mapViewModel.updatePriority(locationPriority)
+
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    ),
+                )
+            }
+
+            // TODO ダイアログはonResumeに移した方がいいかも？ReCompose時に毎回表示されてしまう
+            // システムダイアログで権限を拒否された時に表示するダイアログ
+            if (showRequestLocationPermissionDialog.value) {
+                RequestLocationPermissionDialog(
+                    openDialog = showRequestLocationPermissionDialog.value,
+                    setShowDialog = { boolean ->
+                        showRequestLocationPermissionDialog.value = boolean
+                    },
+                )
+            }
+
+            // システムダイアログでおおよその位置情報の権限が許可された時に表示するダイアログ
+            if (showUpgradeToPreciseLocationDialog.value) {
+                UpdateLocationPermissionDialog(
+                    openDialog = showUpgradeToPreciseLocationDialog.value,
+                    setShowDialog = { boolean ->
+                        showUpgradeToPreciseLocationDialog.value = boolean
+                    },
+                )
+            }
+
+            // システムダイアログでバックグラウンドの権限がを求めるダイアログ
+            if (showRequestBackgroundPermissionDialog.value && !backgroundPermissionGranted.value) {
+                RequestBackgroundLocationPermissionDialog(
+                    openDialog = showRequestBackgroundPermissionDialog.value,
+                    setShowDialog = { boolean ->
+                        showRequestBackgroundPermissionDialog.value = boolean
+                    },
+                )
+            }
+
+            Button(
+                onClick = {
+                    if (backgroundPermissionGranted.value) {
+                        mapViewModel.addGeofence()
+                        mapViewModel.registerGeofence()
+                        scope.launch(Dispatchers.IO) {
+                            geofenceMapViewModel.sendGeoFenceEntryRequest(
+                                EntryGeoFenceReq(
+                                    userId = 12,
+                                    geoFenceId = 2,
+                                    entryTime = "2021-10-01T10:00:00.391Z",
+                                ),
+                            )
+                        }
+                    }
+                },
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = primaryContainerDarkMediumContrast,
+                    ),
+            ) {
+                Text(
+                    text = "ジオフェンスを追加",
+                    color = onPrimaryDark,
+                )
+            }
+
+            ShowMap(
+                modifier = Modifier.fillMaxSize(),
+                locationData =
+                    LocationData(
+                        currentLocation.value.latitude,
+                        currentLocation.value.longitude,
+                        0,
+                    ),
+                geofenceList = geofenceList.toList(),
+                permissionState = accessFineLocationState.value || accessCoarseLocationState.value,
+            )
+        },
+        actions = {},
+    )
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
