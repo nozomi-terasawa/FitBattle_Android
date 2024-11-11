@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fitbattleandroid.R
 import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Body
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.theme.FitBattleAndroidTheme
 
@@ -44,8 +43,8 @@ class PermissionsRationaleActivity : ComponentActivity() {
 @Composable
 fun HealthConnectPrivacyPolicyScreen(modifier: Modifier) {
     Background {
-        Header {
-            Body {
+        Header(
+            content = {
                 Column(
                     modifier =
                         modifier
@@ -91,8 +90,8 @@ fun HealthConnectPrivacyPolicyScreen(modifier: Modifier) {
                         text = "共有されたデータは、ユーザー同士のステータス表示のみに使用され、データから個人が特定されることはありません。",
                     )
                 }
-            }
-        }
+            },
+        )
     }
 }
 
