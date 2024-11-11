@@ -1,9 +1,11 @@
 package com.example.fitbattleandroid.ui.navigation
 
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -16,11 +18,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -35,10 +37,12 @@ import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
 import com.example.fitbattleandroid.repositoryImpl.GeofenceEntryRepositoryImpl
 import com.example.fitbattleandroid.ui.screen.EncounterHistoryScreen
 import com.example.fitbattleandroid.ui.screen.FitnessMemory
+import com.example.fitbattleandroid.ui.screen.LocationRationaleScreen
 import com.example.fitbattleandroid.ui.screen.LoginScreen
 import com.example.fitbattleandroid.ui.screen.MapScreen
 import com.example.fitbattleandroid.ui.screen.RegistrationScreen
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
+import com.example.fitbattleandroid.viewmodel.AlarmViewModel
 import com.example.fitbattleandroid.viewmodel.AuthViewModel
 import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
 import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
@@ -49,6 +53,8 @@ sealed class Screen(
     val route: String,
     val title: String,
 ) {
+    data object LocationPermission : Screen("location-permission", "LocationPermission")
+
     data object Map : Screen("map", "Map")
 
     data object MyData : Screen("my-data", "MyData")
@@ -73,9 +79,7 @@ val items =
 @Composable
 fun App(
     modifier: Modifier,
-    requestPermissionLauncher: ActivityResultLauncher<Array<String>>,
     mapViewModel: MapViewModel,
-    backgroundPermissionGranted: MutableState<Boolean>,
     healthConnectClient: HealthConnectClient,
     context: Application = LocalContext.current.applicationContext as Application,
     authViewModel: AuthViewModel = AuthViewModel(context, AuthRepositoryImpl()),
@@ -86,22 +90,62 @@ fun App(
         navController,
         startDestination = Screen.Top.route,
     ) {
+        val nextDestination =
+            if (
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+            ) { // 正確な位置情報
+                "main"
+            } else {
+                Screen.LocationPermission.route
+            }
+
         composable(Screen.Top.route) { TopScreen(navController) }
         composable(Screen.Login.route) {
             LoginScreen(
-                navController,
+                onNavigateMain = {
+                    navController.navigate(nextDestination)
+                },
+                onNavigateRegi = {
+                    navController.navigate(Screen.Regi.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 authViewModel = authViewModel,
             )
         }
         composable(Screen.Regi.route) {
             RegistrationScreen(
-                navController,
+                onNavigateMain = {
+                    navController.navigate(nextDestination)
+                },
+                onNavigateLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 authViewModel = authViewModel,
+            )
+        }
+        composable(Screen.LocationPermission.route) {
+            LocationRationaleScreen(
+                modifier = modifier,
+                onNavigateMapScreen = {
+                    navController.navigate("main")
+                },
             )
         }
         composable("main") {
             MainNavigation(
-                requestPermissionLauncher,
+                modifier = Modifier.fillMaxHeight(),
                 mapViewModel,
                 geofenceMapViewModel =
                     viewModel {
@@ -110,7 +154,6 @@ fun App(
                             GeofenceEntryRepositoryImpl(EncounterRemoteDatasource()),
                         )
                     },
-                backgroundPermissionGranted,
                 healthConnectClient,
             )
         }
@@ -120,10 +163,9 @@ fun App(
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun MainNavigation(
-    requestPermissionLauncher: ActivityResultLauncher<Array<String>>,
+    modifier: Modifier,
     mapViewModel: MapViewModel,
     geofenceMapViewModel: GeofenceMapViewModel,
-    backgroundPermissionGranted: MutableState<Boolean>,
     healthConnectClient: HealthConnectClient,
 ) {
     val navController = rememberNavController()
@@ -179,23 +221,37 @@ fun MainNavigation(
         NavHost(
             navController,
             startDestination = Screen.Map.route,
-            Modifier.padding(innerPadding),
+            modifier = modifier,
         ) {
+            composable(Screen.LocationPermission.route) {
+                LocationRationaleScreen(
+                    modifier = modifier,
+                    onNavigateMapScreen = {
+                        navController.navigate("main")
+                    },
+                )
+            }
+
             composable(Screen.Map.route) {
                 MapScreen(
-                    Modifier.padding(innerPadding),
-                    requestPermissionLauncher,
+                    modifier =
+                        modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
                     mapViewModel,
-                    backgroundPermissionGranted,
                     geofenceMapViewModel = geofenceMapViewModel,
                 )
             }
             composable(Screen.MyData.route) {
                 FitnessMemory(
-                    modifier = Modifier,
+                    modifier = modifier,
                     healthConnectClient,
                     calorieViewModel =
                         HealthConnectViewModel(
+                            application = LocalContext.current.applicationContext as MyApplication,
+                        ),
+                    alarmViewModel =
+                        AlarmViewModel(
                             application = LocalContext.current.applicationContext as MyApplication,
                         ),
                 )
@@ -204,7 +260,7 @@ fun MainNavigation(
                 val geofenceEntryState = geofenceMapViewModel.geofenceEntryState.collectAsState().value
 
                 EncounterHistoryScreen(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxSize(),
                     geofenceEntryState = geofenceEntryState,
                 )
             }

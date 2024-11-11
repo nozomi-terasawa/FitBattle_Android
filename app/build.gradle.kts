@@ -17,6 +17,10 @@ if (!localPropertiesFile.exists()) {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,6 +28,8 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -92,6 +98,10 @@ dependencies {
     implementation("androidx.fragment:fragment:1.8.3")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
+    // Dagger-Hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
     implementation(libs.ktor.core)
     implementation(libs.ktor.cio)
     implementation(libs.ktor.content.negotiation)
@@ -105,4 +115,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+//    追加
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 }
