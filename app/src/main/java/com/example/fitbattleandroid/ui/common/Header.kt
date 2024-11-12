@@ -40,7 +40,6 @@ fun Header(
         topBar = {
             TopAppBar(
                 title = {
-
                     Text(
                         text = "Share Fit",
                         style =

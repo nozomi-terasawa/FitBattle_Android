@@ -90,18 +90,18 @@ fun RegistrationScreen(
                         // エラーがない場合に登録処理を実行
                         if (!showEmailError && !showPasswordError && !showNameError) {
                             scope.launch {
-                            val authResult =
-                                authViewModel.register(
-                                    userCreateReq = registerState.toUserCreateReq(),
-                                )
-                            when (authResult) {
-                                is AuthState.Success -> {
-                                    scope.launch {
-                                        authViewModel.saveAuthToken(
-                                            applicationContext,
-                                            authResult.token,
-                                        )
-                                        onNavigateMain()
+                                val authResult =
+                                    authViewModel.register(
+                                        userCreateReq = registerState.toUserCreateReq(),
+                                    )
+                                when (authResult) {
+                                    is AuthState.Success -> {
+                                        scope.launch {
+                                            authViewModel.saveAuthToken(
+                                                applicationContext,
+                                                authResult.token,
+                                            )
+                                            onNavigateMain()
                                         }
                                     }
                                     else -> {}
