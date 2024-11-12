@@ -4,7 +4,9 @@ import android.app.Application
 import android.app.NotificationManager
 import android.os.Build
 import com.example.fitbattleandroid.notification.createNotificationChannels
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class MyApplication : Application() {
     var userToken: String? = null
 

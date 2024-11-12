@@ -17,7 +17,7 @@ class WebSocketRepositoryImpl(
         try {
             client.webSocket(
                 method = HttpMethod.Get,
-                host = "192.168.224.234",
+                host = "192.168.11.3",
                 port = 7070,
                 path = "/api/v1/geofence/ws",
                 request = {
