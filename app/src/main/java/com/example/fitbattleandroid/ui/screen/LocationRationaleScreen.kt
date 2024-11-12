@@ -60,7 +60,7 @@ fun LocationRationaleScreen(
                         )
 
                         Image(
-                            painter = painterResource(R.drawable.title),
+                            painter = painterResource(R.drawable.logo_border),
                             contentDescription = null,
                             modifier =
                                 Modifier
