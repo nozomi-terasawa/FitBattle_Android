@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.fitbattleandroid.ui.theme.onBackgroundLightMediumContrast
 import com.example.fitbattleandroid.ui.theme.onSurfaceVariantLight
 import com.example.fitbattleandroid.ui.theme.outlineLightMediumContrast
@@ -19,16 +20,29 @@ fun CommonOutlinedTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    isError: Boolean = false,
+    errorText: String? = null,
 ) {
     Column {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            isError = isError,
             label = {
                 Text(
                     text = label,
                     color = onSurfaceVariantLight, // プレースホルダー色
                 )
+            },
+            supportingText = {
+                // isError が true の場合にエラーメッセージを表示
+                if (isError && errorText != null) {
+                    Text(
+                        text = errorText,
+                        color = androidx.compose.ui.graphics.Color.Red,
+                        fontSize = 12.sp,
+                    )
+                }
             },
             shape = RoundedCornerShape(5.dp),
             colors =

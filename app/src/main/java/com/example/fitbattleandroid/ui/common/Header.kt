@@ -36,7 +36,6 @@ fun Header(
         color = statusBarColors,
         darkIcons = true,
     )
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -77,19 +76,6 @@ fun Header(
         }
     }
 }
-
-// @Composable
-// fun Body(content: @Composable () -> Unit)  {
-//    Column(
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        modifier =
-//            Modifier
-//                .fillMaxSize(),
-//    ) {
-//        content()
-//    }
-// }
 
 // @Composable
 // @Preview

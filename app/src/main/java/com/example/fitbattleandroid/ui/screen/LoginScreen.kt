@@ -3,8 +3,7 @@ package com.example.fitbattleandroid.ui.screen
 import android.app.Application
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +32,10 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // エラー表示用の状態
+    var showEmailError by remember { mutableStateOf(false) }
+    var showPasswordError by remember { mutableStateOf(false) }
+
     Background {
         Header(
             content = {
@@ -40,41 +43,52 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.size(50.dp))
 
+                // メールアドレス入力フィールド
                 CommonOutlinedTextField(
                     value = loginState.email,
                     label = "メールアドレス",
                     onValueChange = { newValue ->
                         authViewModel.updateLoginTextField("email", newValue)
                     },
+                    isError = showEmailError,
+                    errorText = "メールアドレスを入力してください",
                 )
 
+                // パスワード入力フィールド
                 CommonOutlinedTextField(
                     value = loginState.password,
                     label = "パスワード",
                     onValueChange = { newValue ->
                         authViewModel.updateLoginTextField("password", newValue)
                     },
+                    // パスワードが空白の場合にエラーメッセージを表示
+                    isError = showPasswordError,
+                    errorText = "パスワードを入力してください",
                 )
-
                 NormalBottom(
                     onClick = {
-                        scope.launch {
-                            val authResult =
-                                authViewModel.login(authViewModel.loginState.toUserLoginReq())
-                            when (authResult) {
-                                is AuthState.Loading -> {}
-                                is AuthState.Success -> {
-                                    scope.launch {
-                                        authViewModel.saveAuthToken(
-                                            context,
-                                            authResult.token,
-                                        )
-                                        onNavigateMain()
-                                    }
-                                }
+                        // 入力チェック
+                        showEmailError = loginState.email.isBlank()
+                        showPasswordError = loginState.password.isBlank()
 
-                                is AuthState.Error -> {}
-                                else -> {}
+                        // エラーがない場合にログイン処理を実行
+                        if (!showEmailError && !showPasswordError) {
+                            scope.launch {
+                                val authResult = authViewModel.login(authViewModel.loginState.toUserLoginReq())
+                                when (authResult) {
+                                    is AuthState.Loading -> {}
+                                    is AuthState.Success -> {
+                                        scope.launch {
+                                            authViewModel.saveAuthToken(
+                                                context,
+                                                authResult.token,
+                                            )
+                                            onNavigateMain()
+                                        }
+                                    }
+                                    is AuthState.Error -> {}
+                                    AuthState.Initial -> TODO()
+                                }
                             }
                         }
                     },

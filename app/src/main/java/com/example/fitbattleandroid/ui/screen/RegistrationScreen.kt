@@ -3,8 +3,7 @@ package com.example.fitbattleandroid.ui.screen
 import android.app.Application
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +35,11 @@ fun RegistrationScreen(
     val applicationContext = context.applicationContext as MyApplication
     val scope = rememberCoroutineScope()
 
+    // エラー表示用の状態
+    var showEmailError by remember { mutableStateOf(false) }
+    var showPasswordError by remember { mutableStateOf(false) }
+    var showNameError by remember { mutableStateOf(false) }
+
     Background {
         Header(
             content = {
@@ -43,49 +47,65 @@ fun RegistrationScreen(
 
                 Spacer(modifier = Modifier.size(50.dp))
 
+                // メールアドレス入力フィールド
                 CommonOutlinedTextField(
                     value = registerState.email,
                     onValueChange = { newValue ->
                         authViewModel.updateRegisterTextField("email", newValue)
                     },
                     label = "メールアドレス",
+                    isError = showEmailError,
+                    errorText = if (showEmailError) "メールアドレスを入力してください" else null,
                 )
 
+                // パスワード入力フィールド
                 CommonOutlinedTextField(
                     value = registerState.password,
                     label = "パスワード",
                     onValueChange = { newValue ->
                         authViewModel.updateRegisterTextField("password", newValue)
                     },
+                    isError = showPasswordError,
+                    errorText = if (showPasswordError) "パスワードを入力してください" else null,
                 )
 
+                // 名前入力フィールド
                 CommonOutlinedTextField(
                     value = registerState.userName,
                     label = "名前",
                     onValueChange = { newValue ->
                         authViewModel.updateRegisterTextField("userName", newValue)
                     },
+                    isError = showNameError,
+                    errorText = if (showNameError) "名前を入力してください" else null,
                 )
 
                 NormalBottom(
                     onClick = {
-                        scope.launch {
-                            val authResult =
-                                authViewModel.register(
-                                    userCreateReq = registerState.toUserCreateReq(),
-                                )
-                            when (authResult) {
-                                is AuthState.Success -> {
-                                    scope.launch {
-                                        authViewModel.saveAuthToken(
-                                            applicationContext,
-                                            authResult.token,
-                                        )
-                                        onNavigateMain()
-                                    }
-                                }
+                        // 入力チェック
+                        showEmailError = registerState.email.isBlank()
+                        showPasswordError = registerState.password.isBlank()
+                        showNameError = registerState.userName.isBlank()
 
-                                else -> {}
+                        // エラーがない場合に登録処理を実行
+                        if (!showEmailError && !showPasswordError && !showNameError) {
+                            scope.launch {
+                                val authResult =
+                                    authViewModel.register(
+                                        userCreateReq = registerState.toUserCreateReq(),
+                                    )
+                                when (authResult) {
+                                    is AuthState.Success -> {
+                                        scope.launch {
+                                            authViewModel.saveAuthToken(
+                                                applicationContext,
+                                                authResult.token,
+                                            )
+                                            onNavigateMain()
+                                        }
+                                    }
+                                    else -> {}
+                                }
                             }
                         }
                     },

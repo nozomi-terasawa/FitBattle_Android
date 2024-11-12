@@ -23,11 +23,10 @@ fun TopScreen(navController: NavController) {
         Header(
             content = {
                 Image(
-                    painter = painterResource(R.drawable.title),
+                    painter = painterResource(R.drawable.logo_border),
                     contentDescription = null,
-                    modifier = Modifier.size(400.dp),
+                    modifier = Modifier.size(500.dp),
                 )
-
                 Column {
                     NormalBottom({ navController.navigate("login") }) {
                         NormalText("ログイン")
