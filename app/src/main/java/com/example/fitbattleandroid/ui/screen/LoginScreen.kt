@@ -3,14 +3,11 @@ package com.example.fitbattleandroid.ui.screen
 import android.app.Application
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fitbattleandroid.MyApplication
@@ -59,7 +56,7 @@ fun LoginScreen(
                         authViewModel.updateLoginTextField("email", newValue)
                     },
                     isError = showEmailError,
-                    errorText = "メールアドレスを入力してください"
+                    errorText = "メールアドレスを入力してください",
                 )
 
                 // パスワード入力フィールド
@@ -71,7 +68,7 @@ fun LoginScreen(
                     },
                     // パスワードが空白の場合にエラーメッセージを表示
                     isError = showPasswordError,
-                    errorText = "パスワードを入力してください"
+                    errorText = "パスワードを入力してください",
                 )
                 NormalBottom(
                     onClick = {
@@ -125,9 +122,9 @@ fun LoginScreenPreview() {
     LoginScreen(
         navController = rememberNavController(),
         authViewModel =
-        AuthViewModel(
-            LocalContext.current.applicationContext as Application,
-            AuthRepositoryImpl(),
-        ),
+            AuthViewModel(
+                LocalContext.current.applicationContext as Application,
+                AuthRepositoryImpl(),
+            ),
     )
 }

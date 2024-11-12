@@ -3,14 +3,11 @@ package com.example.fitbattleandroid.ui.screen
 import android.app.Application
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fitbattleandroid.MyApplication
@@ -61,7 +58,7 @@ fun RegistrationScreen(
                     },
                     label = "メールアドレス",
                     isError = showEmailError,
-                    errorText = if (showEmailError) "メールアドレスを入力してください" else null
+                    errorText = if (showEmailError) "メールアドレスを入力してください" else null,
                 )
 
                 // パスワード入力フィールド
@@ -72,7 +69,7 @@ fun RegistrationScreen(
                         authViewModel.updateRegisterTextField("password", newValue)
                     },
                     isError = showPasswordError,
-                    errorText = if (showPasswordError) "パスワードを入力してください" else null
+                    errorText = if (showPasswordError) "パスワードを入力してください" else null,
                 )
 
                 // 名前入力フィールド
@@ -83,7 +80,7 @@ fun RegistrationScreen(
                         authViewModel.updateRegisterTextField("userName", newValue)
                     },
                     isError = showNameError,
-                    errorText = if (showNameError) "名前を入力してください" else null
+                    errorText = if (showNameError) "名前を入力してください" else null,
                 )
 
                 NormalBottom(
@@ -140,10 +137,10 @@ fun RegistrationScreenPreview(modifier: Modifier = Modifier) {
     RegistrationScreen(
         navController = rememberNavController(),
         authViewModel =
-        AuthViewModel(
-            LocalContext.current.applicationContext as Application,
-            AuthRepositoryImpl(),
-        ),
+            AuthViewModel(
+                LocalContext.current.applicationContext as Application,
+                AuthRepositoryImpl(),
+            ),
         modifier = modifier,
     )
 }

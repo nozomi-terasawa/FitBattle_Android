@@ -107,5 +107,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
 //    追加
-    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 }

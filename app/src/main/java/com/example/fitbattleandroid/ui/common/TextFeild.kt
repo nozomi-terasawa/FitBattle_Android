@@ -20,7 +20,7 @@ fun CommonOutlinedTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    isError:Boolean = false,
+    isError: Boolean = false,
     errorText: String? = null,
 ) {
     Column {
@@ -40,7 +40,7 @@ fun CommonOutlinedTextField(
                     Text(
                         text = errorText,
                         color = androidx.compose.ui.graphics.Color.Red,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
                     )
                 }
             },
