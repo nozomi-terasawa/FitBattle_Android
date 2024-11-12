@@ -95,8 +95,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
     implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
-
     implementation("androidx.fragment:fragment:1.8.3")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Dagger-Hilt
     implementation("com.google.dagger:hilt-android:2.51.1")
@@ -117,5 +117,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
 //    追加
-    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 }

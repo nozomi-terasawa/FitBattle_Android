@@ -20,8 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -50,15 +48,14 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
-import com.example.fitbattleandroid.data.FitnessRemoteDataSource
+import com.example.fitbattleandroid.MyApplication
 import com.example.fitbattleandroid.data.datastore.DataStoreManager
-import com.example.fitbattleandroid.repositoryImpl.SaveFitnessRepositoryImpl
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.common.ShowCurrentTimeAndRemainingTime
 import com.example.fitbattleandroid.ui.dialog.HealthConnectPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.ShareHealthDialog
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
-import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
+import com.example.fitbattleandroid.viewmodel.AlarmViewModel
 import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
 import com.websarva.wings.android.myapplication.FireAnimeModule
 import kotlinx.coroutines.launch
@@ -73,6 +70,7 @@ fun FitnessMemory(
     modifier: Modifier,
     healthConnectClient: HealthConnectClient,
     calorieViewModel: HealthConnectViewModel,
+    alarmViewModel: AlarmViewModel,
 ) {
     val context = LocalContext.current
     val calorieUiState by remember { mutableStateOf(calorieViewModel.calorieUiState) }
@@ -97,6 +95,12 @@ fun FitnessMemory(
     val showShareHealthDialog = remember { mutableStateOf(false) }
     val shareHealthDataPermission = remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        DataStoreManager.getShareHealthDataAllowed(context).collect { boolean ->
+            shareHealthDataPermission.value = boolean
+        }
+    }
+
     val healthConnectPermissionLauncher =
         rememberLauncherForActivityResult(
             PermissionController.createRequestPermissionResultContract(),
@@ -119,6 +123,12 @@ fun FitnessMemory(
                         scope.launch {
                             // DataStoreに保存
                             DataStoreManager.saveShareHealthDataAllowed(context, shareHealthDataPermission.value)
+
+                            if (shareHealthDataPermission.value) {
+                                alarmViewModel.setAlarmToSaveCalorie()
+                            } else {
+                                alarmViewModel.cancelAlarmToSaveCalorie()
+                            }
                         }
                         showShareHealthDialog.value = false
                     },
@@ -192,51 +202,29 @@ fun FitnessMemory(
                             // .padding(90.dp)
                         )
                     }
+                }
 
-                    Column(
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.size(550.dp))
+
+                    ShowCurrentTimeAndRemainingTime(modifier)
+
+                    Text(
                         modifier =
                             Modifier
-                                .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Spacer(modifier = Modifier.size(550.dp))
-
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    calorieViewModel.readCalorie(
-                                        healthConnectClient = healthConnectClient,
-                                        startTime = Instant.ofEpochMilli(startEpochMilli),
-                                        endTime = Instant.ofEpochMilli(endEpochMilli),
-                                    )
-                                }
-                            },
-                            colors =
-                                ButtonDefaults.buttonColors(
-                                    containerColor = primaryContainerDarkMediumContrast,
-                                ),
-                        ) {
-                            Text(
-                                text = "最新のカロリーを取得",
-                                fontSize = 20.sp,
-                                color = onPrimaryDark,
-                            )
-                        }
-
-                        ShowCurrentTimeAndRemainingTime(modifier)
-
-                        Text(
-                            modifier =
-                                Modifier
-                                    .padding(top = 10.dp)
-                                    .align(Alignment.CenterHorizontally),
-                            text = "$currentCalorieStr kcal",
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = onPrimaryDark,
-                        )
-                    }
+                                .padding(top = 10.dp)
+                                .align(Alignment.CenterHorizontally),
+                        text = "$currentCalorieStr kcal",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = onPrimaryDark,
+                    )
                 }
             }
         },
@@ -410,15 +398,15 @@ fun CalorieMeter(
 @Composable
 fun FitnessMemoryPreview() {
     val context = LocalContext.current
+    val application = context.applicationContext
 
     FitnessMemory(
         modifier = Modifier,
         healthConnectClient = HealthConnectClient.getOrCreate(context),
         calorieViewModel =
             HealthConnectViewModel(
-                SaveFitnessRepositoryImpl(
-                    FitnessRemoteDataSource(),
-                ),
+                application = application as MyApplication,
             ),
+        alarmViewModel = AlarmViewModel(application),
     )
 }

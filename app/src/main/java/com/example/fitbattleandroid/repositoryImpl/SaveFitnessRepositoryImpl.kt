@@ -6,7 +6,13 @@ import com.example.fitbattleandroid.data.remote.SaveFitnessReq
 class SaveFitnessRepositoryImpl(
     private val fitnessRemoteDataSource: FitnessRemoteDataSource,
 ) {
-    suspend fun saveFitnessData(request: SaveFitnessReq) {
-        fitnessRemoteDataSource.sendFitnessSave(request)
+    suspend fun saveFitnessData(
+        request: SaveFitnessReq,
+        userToken: String,
+    ) {
+        fitnessRemoteDataSource.sendFitnessSave(
+            request,
+            userToken,
+        )
     }
 }
