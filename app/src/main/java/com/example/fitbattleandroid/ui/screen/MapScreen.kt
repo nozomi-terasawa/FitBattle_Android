@@ -82,11 +82,21 @@ fun MapScreen(
                     when {
                         permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
                             Log.d(TAG, "正確な位置情報の権限が許可されました")
+                            accessFineLocationState.value =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                ) == PackageManager.PERMISSION_GRANTED
                             showRequestBackgroundPermissionDialog.value = true
                         }
 
                         permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
                             Log.d(TAG, "おおよその位置情報の権限が許可されました")
+                            accessCoarseLocationState.value =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                ) == PackageManager.PERMISSION_GRANTED
                             showUpgradeToPreciseLocationDialog.value = true
                         }
 
