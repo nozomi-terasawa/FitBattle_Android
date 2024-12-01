@@ -74,38 +74,47 @@ class MapViewModel
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     for (location in locationResult.locations) {
+                        val updatedLatitude = location.latitude
+                        val updatedLongitude = location.longitude
+
                         _location.value =
                             _location.value.copy(
-                                latitude = location.latitude,
-                                longitude = location.longitude,
-                                priority = _location.value.priority,
+                                latitude = updatedLatitude,
+                                longitude = updatedLongitude,
                             )
                     }
                 }
             }
 
+        // 位置情報の優先度の更新
         fun updatePriority(priority: Int) {
             _location.value =
                 _location.value.copy(
                     priority = priority,
                 )
+            updateLocationRequest()
         /* priorityの確認
         Log.d("LocationViewModel", locationRequest.priority.toPriorityString())
          */
         }
 
-        fun updateLocationRequest() {
+        // 位置情報リクエストの更新
+        // 優先度や更新頻度などを変更した際に、このメソッドを呼び出して更新完了
+        private fun updateLocationRequest() {
             _locationRequest = createLocationRequest()
         }
 
-        // 　位置情報の設定
+        // 　位置情報リクエストの設定
+        // 利用可能な設定：https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
         private fun createLocationRequest(): LocationRequest =
             LocationRequest
-                .Builder(5000)
-                .setPriority(_location.value.priority)
+                .Builder(1000)
+                // .setPriority(_location.value.priority)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .build()
 
         // 位置情報の取得
+        // デバイスが最後に確認された場所の位置情報
         fun fetchLocation(): LocationData {
             try {
                 val result =
@@ -135,6 +144,7 @@ class MapViewModel
                         locationCallback,
                         Looper.getMainLooper(),
                     )
+                    isLocationUpdatesActive = true
                 } catch (e: SecurityException) {
                     Log.d(TAG, e.toString())
                 }
@@ -145,6 +155,7 @@ class MapViewModel
         fun stopLocationUpdates() {
             if (isLocationUpdatesActive) {
                 fusedLocationClient.removeLocationUpdates(locationCallback)
+                isLocationUpdatesActive = false
             }
         }
 
