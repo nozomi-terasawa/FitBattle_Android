@@ -15,19 +15,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.fitbattleandroid.data.remote.EntryGeoFenceReq
 import com.example.fitbattleandroid.model.LocationData
 import com.example.fitbattleandroid.ui.common.Header
 import com.example.fitbattleandroid.ui.dialog.RequestBackgroundLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.RequestLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.UpdateLocationPermissionDialog
+import com.example.fitbattleandroid.ui.map.CurrentLocationMarker
+import com.example.fitbattleandroid.ui.map.DeviceOrientationProvider
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
 import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
@@ -39,8 +46,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 private const val TAG = "MapScreen"
@@ -52,11 +62,10 @@ fun MapScreen(
     mapViewModel: MapViewModel,
     geofenceMapViewModel: GeofenceMapViewModel,
 ) {
-    val locationData = mapViewModel.location.collectAsState().value
+    val locationDataFlow = mapViewModel.location
     val context = LocalContext.current
     val geofenceList = mapViewModel.geofenceList
     val scope = rememberCoroutineScope()
-    val currentLocation = remember { mutableStateOf(locationData) }
     val showRequestLocationPermissionDialog = remember { mutableStateOf(false) } // 位置情報権限のリクエストダイアログ
     val showUpgradeToPreciseLocationDialog = remember { mutableStateOf(false) } // 正確な位置情報のリクエストダイアログ
     val showRequestBackgroundPermissionDialog = remember { mutableStateOf(false) } // バックグラウンドの位置情報権限のリクエストダイアログ
@@ -65,12 +74,21 @@ fun MapScreen(
     val accessCoarseLocationState = remember { mutableStateOf(false) }
     val backgroundPermissionGranted = remember { mutableStateOf(false) }
 
+    val deviceOrientationProvider = DeviceOrientationProvider(context)
+    val heading = deviceOrientationProvider.heading
+
+    val cameraBearing = rememberCameraPositionState()
+
+    LaunchedEffect(cameraBearing) {
+        Log.d("result", cameraBearing.toString() + "向き")
+    }
+
     Header(
         content = {
             if (accessCoarseLocationState.value || accessFineLocationState.value) {
                 LaunchedEffect(Unit) {
                     scope.launch(Dispatchers.IO) {
-                        currentLocation.value = mapViewModel.fetchLocation()
+                        mapViewModel.fetchLocation()
                     }
                 }
             }
@@ -174,6 +192,21 @@ fun MapScreen(
                 )
             }
 
+            // 位置情報の取得が許可されている場合、端末の向きを取得
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                if (accessFineLocationState.value) {
+                    deviceOrientationProvider.start()
+                }
+            }
+
+            if (accessFineLocationState.value) {
+                deviceOrientationProvider.start()
+            }
+
+            LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+                deviceOrientationProvider.stop()
+            }
+
             Button(
                 onClick = {
                     if (backgroundPermissionGranted.value) {
@@ -203,14 +236,10 @@ fun MapScreen(
 
             ShowMap(
                 modifier = Modifier.fillMaxSize(),
-                locationData =
-                    LocationData(
-                        currentLocation.value.latitude,
-                        currentLocation.value.longitude,
-                        0,
-                    ),
+                locationDataFlow = locationDataFlow,
                 geofenceList = geofenceList.toList(),
                 permissionState = accessFineLocationState.value || accessCoarseLocationState.value,
+                orientation = heading,
             )
         },
         actions = {},
@@ -229,32 +258,52 @@ fun isBackgroundLocationPermissionGranted(context: Context): Boolean {
 @Composable
 fun ShowMap(
     modifier: Modifier,
-    locationData: LocationData,
+    locationDataFlow: StateFlow<LocationData>,
     geofenceList: List<Geofence>,
     permissionState: Boolean,
+    orientation: StateFlow<Float>,
 ) {
     var mapProperties = MapProperties()
+    val currentLocation = locationDataFlow.collectAsState().value
     val cameraPosition =
         rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(LatLng(locationData.latitude, locationData.longitude), 15f)
+            position = CameraPosition.fromLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), 15f)
         }
 
+    /*
     LaunchedEffect(locationData) {
         cameraPosition.position = CameraPosition.fromLatLngZoom(LatLng(locationData.latitude, locationData.longitude), 15f)
     }
 
-    if (permissionState) {
-        mapProperties =
-            MapProperties(
-                isMyLocationEnabled = true,
-            )
-    }
+     */
+
+//    if (permissionState) {
+//        mapProperties =
+//            MapProperties(
+//                isMyLocationEnabled = true,
+//            )
+//    }
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPosition,
         properties = mapProperties,
     ) {
+        // デバイスの向きとカメラのベアリングを組み合わせた合成ベアリング
+        val deviceOrientation = orientation.collectAsState().value
+        val cameraBearing by remember {
+            derivedStateOf { cameraPosition.position.bearing }
+        }
+        val combinedBearing = (deviceOrientation - cameraBearing + 360) % 360 // 0〜360°に正規化
+
+        CustomMarker(
+            bearing = combinedBearing,
+            markerState =
+                MarkerState(
+                    position = LatLng(currentLocation.latitude, currentLocation.longitude),
+                ),
+        )
+
         geofenceList.forEach { geofence ->
             Circle(
                 center = LatLng(geofence.latitude, geofence.longitude),
@@ -264,5 +313,19 @@ fun ShowMap(
                 strokeWidth = 2f,
             )
         }
+    }
+}
+
+@Composable
+fun CustomMarker(
+    bearing: Float,
+    markerState: MarkerState,
+) {
+    MarkerComposable(
+        state = markerState,
+        rotation = bearing,
+        anchor = Offset(0.5f, 0.5f), // マーカーの基準点を中央下部に設定
+    ) {
+        CurrentLocationMarker()
     }
 }
