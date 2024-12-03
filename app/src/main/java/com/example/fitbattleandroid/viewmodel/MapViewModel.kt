@@ -31,10 +31,23 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val TAG = "MapViewModel"
+
+data class LocationPermissionState(
+    var accessFineLocationState: Boolean = false,
+    var accessCoarseLocationState: Boolean = false,
+    var backgroundPermissionGranted: Boolean = false,
+)
+
+data class PermissionDialogState(
+    var showRequestLocationPermissionDialog: Boolean = false, // 位置情報権限のリクエストダイアログ
+    var showUpgradeToPreciseLocationDialog: Boolean = false, // 正確な位置情報のリクエストダイアログ
+    var showRequestBackgroundPermissionDialog: Boolean = false, // バックグラウンドの位置情報権限のリクエストダイアログ
+)
 
 @HiltViewModel
 class MapViewModel
@@ -85,6 +98,64 @@ class MapViewModel
                     }
                 }
             }
+
+        // 位置情報の権限の状態
+        private val _locationPermissionState = MutableStateFlow(LocationPermissionState())
+        val locationPermissionState: StateFlow<LocationPermissionState> = _locationPermissionState.asStateFlow()
+
+        // 正確な位置情報の更新
+        fun updateAccessFineLocationState(state: Boolean) {
+            _locationPermissionState.update {
+                _locationPermissionState.value.copy(
+                    accessFineLocationState = state,
+                )
+            }
+        }
+
+        // おおよその位置情報の更新
+        fun updateAccessCoarseLocationState(state: Boolean) {
+            _locationPermissionState.update {
+                _locationPermissionState.value.copy(
+                    accessCoarseLocationState = state,
+                )
+            }
+        }
+
+        // バックグラウンドでの位置情報の更新
+        fun updateBackgroundPermissionState(state: Boolean) {
+            _locationPermissionState.update {
+                _locationPermissionState.value.copy(
+                    backgroundPermissionGranted = state,
+                )
+            }
+        }
+
+        private val _permissionDialogState = MutableStateFlow(PermissionDialogState())
+        val permissionDialogState: StateFlow<PermissionDialogState> = _permissionDialogState.asStateFlow()
+
+        fun showRequestLocationPermissionDialog(state: Boolean) {
+            _permissionDialogState.update {
+                _permissionDialogState.value.copy(
+                    showRequestLocationPermissionDialog = state,
+                )
+            }
+        }
+
+        fun showUpgradeToPreciseLocationDialog(state: Boolean) {
+            _permissionDialogState.update {
+                _permissionDialogState.value.copy(
+                    showUpgradeToPreciseLocationDialog = state,
+                )
+            }
+        }
+
+        fun showRequestBackgroundPermissionDialog(state: Boolean) {
+            _permissionDialogState.update {
+                _permissionDialogState.value.copy(
+                    showRequestBackgroundPermissionDialog = state,
+                )
+            }
+        }
 
         // 位置情報の優先度の更新
         fun updatePriority(priority: Int) {
