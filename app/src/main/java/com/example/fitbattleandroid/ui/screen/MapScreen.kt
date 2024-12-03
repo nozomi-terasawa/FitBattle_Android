@@ -240,29 +240,25 @@ fun ShowMap(
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), 15f)
         }
-
-    LaunchedEffect(currentLocation) {
-        cameraPosition.position = CameraPosition.fromLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), 15f)
+    // デバイスの向きとカメラのベアリングを組み合わせた合成ベアリング
+    val deviceOrientation = orientation.collectAsState().value
+    val cameraBearing by remember {
+        derivedStateOf { cameraPosition.position.bearing }
     }
+    val combinedBearing = (deviceOrientation - cameraBearing + 360) % 360 // 0〜360°に正規化
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPosition,
         properties = mapProperties,
     ) {
-        // デバイスの向きとカメラのベアリングを組み合わせた合成ベアリング
-        val deviceOrientation = orientation.collectAsState().value
-        val cameraBearing by remember {
-            derivedStateOf { cameraPosition.position.bearing }
-        }
-        val combinedBearing = (deviceOrientation - cameraBearing + 360) % 360 // 0〜360°に正規化
-
         CustomMarker(
             bearing = combinedBearing,
-            markerState =
+            markerState = remember {
                 MarkerState(
                     position = LatLng(currentLocation.latitude, currentLocation.longitude),
-                ),
+                )
+                },
         )
 
         geofenceList.forEach { geofence ->
