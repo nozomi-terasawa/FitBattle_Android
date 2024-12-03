@@ -34,6 +34,7 @@ import com.example.fitbattleandroid.ui.dialog.RequestLocationPermissionDialog
 import com.example.fitbattleandroid.ui.dialog.UpdateLocationPermissionDialog
 import com.example.fitbattleandroid.ui.map.CurrentLocationMarker
 import com.example.fitbattleandroid.ui.map.DeviceOrientationProvider
+import com.example.fitbattleandroid.ui.state.PermissionDialogState
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
 import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
@@ -65,23 +66,14 @@ fun MapScreen(
     val context = LocalContext.current
     val geofenceList = mapViewModel.geofenceList
     val scope = rememberCoroutineScope()
-
-    val locationPermissionState = mapViewModel.locationPermissionState.collectAsState().value
-    val permissionDialogState = mapViewModel.permissionDialogState.collectAsState().value
-
+    val mapScreenUiState = mapViewModel.mapScreenUiState.collectAsState().value
     val deviceOrientationProvider = DeviceOrientationProvider(context)
     val heading = deviceOrientationProvider.heading
 
-    val cameraBearing = rememberCameraPositionState()
-
-    LaunchedEffect(cameraBearing) {
-        Log.d("result", cameraBearing.toString() + "向き")
-    }
-
     Header(
         content = {
-            if (locationPermissionState.accessCoarseLocationState ||
-                locationPermissionState.accessFineLocationState
+            if (mapScreenUiState.locationPermissionState.accessCoarseLocationState ||
+                mapScreenUiState.locationPermissionState.accessFineLocationState
             ) {
                 LaunchedEffect(Unit) {
                     scope.launch(Dispatchers.IO) {
@@ -98,68 +90,27 @@ fun MapScreen(
                     when {
                         permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
                             // 正確な位置情報の権限が許可
-                            val accessFineLocationState =
-                                ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                ) == PackageManager.PERMISSION_GRANTED
-
-                            mapViewModel.updateAccessFineLocationState(accessFineLocationState)
-
-                            mapViewModel.showRequestBackgroundPermissionDialog(true)
+                            mapViewModel.checkFineLocationPermission(context)
+                            mapViewModel.updatePermissionDialogState(PermissionDialogState::showRequestBackgroundPermissionDialog, true)
                         }
 
                         permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                            // おおよその位置情報の権限が許可されました
-                            val accessCoarseLocationState =
-                                ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                                ) == PackageManager.PERMISSION_GRANTED
-
-                            mapViewModel.updateAccessCoarseLocationState(accessCoarseLocationState)
-
-                            mapViewModel.showUpgradeToPreciseLocationDialog(true)
+                            // おおよその位置情報の権限が許可
+                            mapViewModel.checkCoarseLocationPermission(context)
+                            mapViewModel.updatePermissionDialogState(PermissionDialogState::showUpgradeToPreciseLocationDialog, true)
                         }
 
                         else -> {
                             Log.d(TAG, "どちらの位置情報権限も拒否されました")
-                            mapViewModel.showRequestLocationPermissionDialog(true)
+                            mapViewModel.updatePermissionDialogState(PermissionDialogState::showRequestLocationPermissionDialog, true)
                         }
                     }
                 }
 
             // 位置情報の更新
             LaunchedEffect(Unit) {
-                // おおよその位置情報
-                val accessCoarseLocationState =
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                    ) == PackageManager.PERMISSION_GRANTED
-                mapViewModel.updateAccessCoarseLocationState(accessCoarseLocationState)
-
-                // 正確な位置情報
-                val accessFineLocationState =
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                    ) == PackageManager.PERMISSION_GRANTED
-                mapViewModel.updateAccessFineLocationState(accessFineLocationState)
-
-                Log.d("result", "位置情報の更新: $locationPermissionState")
-
-                // バックグラウンドでの位置情報
-                val backgroundPermissionGranted =
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                    ) == PackageManager.PERMISSION_GRANTED
-
-                mapViewModel.updateBackgroundPermissionState(backgroundPermissionGranted)
-
                 val locationPriority =
-                    if (locationPermissionState.accessFineLocationState) {
+                    if (mapScreenUiState.locationPermissionState.accessFineLocationState) {
                         Priority.PRIORITY_HIGH_ACCURACY
                     } else {
                         Priority.PRIORITY_BALANCED_POWER_ACCURACY
@@ -177,45 +128,51 @@ fun MapScreen(
 
             // TODO ダイアログはonResumeに移した方がいいかも？ReCompose時に毎回表示されてしまう
             // システムダイアログで権限を拒否された時に表示するダイアログ
-            if (permissionDialogState.showRequestLocationPermissionDialog) {
+            if (mapScreenUiState.permissionDialogState.showRequestLocationPermissionDialog) {
                 RequestLocationPermissionDialog(
                     openDialog = true,
                     setShowDialog = { boolean ->
-                        mapViewModel.showRequestLocationPermissionDialog(boolean)
+                        mapViewModel.updatePermissionDialogState(PermissionDialogState::showRequestLocationPermissionDialog, boolean)
                     },
                 )
             }
 
             // システムダイアログでおおよその位置情報の権限が許可された時に表示するダイアログ
-            if (permissionDialogState.showUpgradeToPreciseLocationDialog) {
+            if (mapScreenUiState.permissionDialogState.showUpgradeToPreciseLocationDialog) {
                 UpdateLocationPermissionDialog(
                     openDialog = true,
                     setShowDialog = { boolean ->
-                        mapViewModel.showUpgradeToPreciseLocationDialog(boolean)
+                        mapViewModel.updatePermissionDialogState(PermissionDialogState::showUpgradeToPreciseLocationDialog, boolean)
                     },
                 )
             }
 
             // システムダイアログでバックグラウンドの権限がを求めるダイアログ
-            if (permissionDialogState.showRequestBackgroundPermissionDialog &&
-                !locationPermissionState.backgroundPermissionGranted
+            if (mapScreenUiState.permissionDialogState.showRequestBackgroundPermissionDialog &&
+                !mapScreenUiState.locationPermissionState.backgroundPermissionGranted
             ) {
                 RequestBackgroundLocationPermissionDialog(
                     openDialog = true,
                     setShowDialog = { boolean ->
-                        mapViewModel.showRequestBackgroundPermissionDialog(boolean)
+                        mapViewModel.updatePermissionDialogState(PermissionDialogState::showRequestBackgroundPermissionDialog, boolean)
                     },
                 )
             }
 
             // 位置情報の取得が許可されている場合、端末の向きを取得
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                if (locationPermissionState.accessFineLocationState) {
+                // 位置情報の権限のチェックと状態の更新
+                mapViewModel.checkCoarseLocationPermission(context)
+                mapViewModel.checkFineLocationPermission(context)
+                Log.d("result", "onResume")
+                mapViewModel.checkBackgroundLocationPermission(context)
+
+                if (mapScreenUiState.locationPermissionState.accessFineLocationState) {
                     deviceOrientationProvider.start()
                 }
             }
 
-            if (locationPermissionState.accessFineLocationState) {
+            if (mapScreenUiState.locationPermissionState.accessFineLocationState) {
                 deviceOrientationProvider.start()
             }
 
@@ -225,7 +182,7 @@ fun MapScreen(
 
             Button(
                 onClick = {
-                    if (locationPermissionState.backgroundPermissionGranted) {
+                    if (mapScreenUiState.locationPermissionState.backgroundPermissionGranted) {
                         mapViewModel.addGeofence()
                         mapViewModel.registerGeofence()
                         scope.launch(Dispatchers.IO) {
@@ -254,9 +211,6 @@ fun MapScreen(
                 modifier = Modifier.fillMaxSize(),
                 locationDataFlow = locationDataFlow,
                 geofenceList = geofenceList.toList(),
-                permissionState =
-                    locationPermissionState.accessFineLocationState ||
-                        locationPermissionState.accessCoarseLocationState,
                 orientation = heading,
             )
         },
@@ -278,10 +232,9 @@ fun ShowMap(
     modifier: Modifier,
     locationDataFlow: StateFlow<LocationData>,
     geofenceList: List<Geofence>,
-    permissionState: Boolean,
     orientation: StateFlow<Float>,
 ) {
-    var mapProperties = MapProperties()
+    val mapProperties = MapProperties()
     val currentLocation = locationDataFlow.collectAsState().value
     val cameraPosition =
         rememberCameraPositionState {
@@ -291,13 +244,6 @@ fun ShowMap(
     LaunchedEffect(currentLocation) {
         cameraPosition.position = CameraPosition.fromLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), 15f)
     }
-
-//    if (permissionState) {
-//        mapProperties =
-//            MapProperties(
-//                isMyLocationEnabled = true,
-//            )
-//    }
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),

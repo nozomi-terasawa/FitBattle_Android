@@ -3,12 +3,14 @@ package com.example.fitbattleandroid.viewmodel
 import android.Manifest
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitbattleandroid.MyApplication
@@ -16,6 +18,9 @@ import com.example.fitbattleandroid.model.GeofenceData
 import com.example.fitbattleandroid.model.LocationData
 import com.example.fitbattleandroid.receiver.GeofenceBroadcastReceiver
 import com.example.fitbattleandroid.repository.FetchGeoFenceInfoRepository
+import com.example.fitbattleandroid.ui.state.LocationPermissionState
+import com.example.fitbattleandroid.ui.state.MapScreenUiState
+import com.example.fitbattleandroid.ui.state.PermissionDialogState
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
@@ -34,20 +39,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.KProperty1
 
 private const val TAG = "MapViewModel"
-
-data class LocationPermissionState(
-    var accessFineLocationState: Boolean = false,
-    var accessCoarseLocationState: Boolean = false,
-    var backgroundPermissionGranted: Boolean = false,
-)
-
-data class PermissionDialogState(
-    var showRequestLocationPermissionDialog: Boolean = false, // 位置情報権限のリクエストダイアログ
-    var showUpgradeToPreciseLocationDialog: Boolean = false, // 正確な位置情報のリクエストダイアログ
-    var showRequestBackgroundPermissionDialog: Boolean = false, // バックグラウンドの位置情報権限のリクエストダイアログ
-)
 
 @HiltViewModel
 class MapViewModel
@@ -99,62 +93,113 @@ class MapViewModel
                 }
             }
 
-        // 位置情報の権限の状態
-        private val _locationPermissionState = MutableStateFlow(LocationPermissionState())
-        val locationPermissionState: StateFlow<LocationPermissionState> = _locationPermissionState.asStateFlow()
+        private val _mapScreenUiState = MutableStateFlow(MapScreenUiState())
+        val mapScreenUiState: StateFlow<MapScreenUiState> = _mapScreenUiState.asStateFlow()
 
-        // 正確な位置情報の更新
-        fun updateAccessFineLocationState(state: Boolean) {
-            _locationPermissionState.update {
-                _locationPermissionState.value.copy(
-                    accessFineLocationState = state,
+        // 権限の更新を反映
+        fun updateLocationPermissionState(
+            select: KProperty1<LocationPermissionState, Boolean>,
+            state: Boolean,
+        ) {
+            _mapScreenUiState.update { current ->
+                current.copy(
+                    locationPermissionState =
+                        current.locationPermissionState.let { currentPermissionState ->
+                            when (select) {
+                                LocationPermissionState::accessFineLocationState ->
+                                    currentPermissionState.copy(
+                                        accessFineLocationState = state,
+                                    )
+
+                                LocationPermissionState::accessCoarseLocationState ->
+                                    currentPermissionState.copy(
+                                        accessCoarseLocationState = state,
+                                    )
+
+                                LocationPermissionState::backgroundPermissionGranted ->
+                                    currentPermissionState.copy(
+                                        backgroundPermissionGranted = state,
+                                    )
+
+                                else -> throw IllegalArgumentException("Unknown select: $select")
+                            }
+                        },
                 )
             }
         }
 
-        // おおよその位置情報の更新
-        fun updateAccessCoarseLocationState(state: Boolean) {
-            _locationPermissionState.update {
-                _locationPermissionState.value.copy(
-                    accessCoarseLocationState = state,
+        // ダイアログの状態を更新
+        fun updatePermissionDialogState(
+            dialog: KProperty1<PermissionDialogState, Boolean>,
+            state: Boolean,
+        ) {
+            _mapScreenUiState.update { current ->
+                current.copy(
+                    permissionDialogState =
+                        current.permissionDialogState.let { currentPermissionDialogState ->
+                            when (dialog) {
+                                PermissionDialogState::showRequestLocationPermissionDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showRequestLocationPermissionDialog = state,
+                                    )
+
+                                PermissionDialogState::showUpgradeToPreciseLocationDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showUpgradeToPreciseLocationDialog = state,
+                                    )
+
+                                PermissionDialogState::showRequestBackgroundPermissionDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showRequestBackgroundPermissionDialog = state,
+                                    )
+
+                                else -> throw IllegalArgumentException("Unknown dialog: $dialog")
+                            }
+                        },
                 )
             }
         }
 
-        // バックグラウンドでの位置情報の更新
-        fun updateBackgroundPermissionState(state: Boolean) {
-            _locationPermissionState.update {
-                _locationPermissionState.value.copy(
-                    backgroundPermissionGranted = state,
-                )
-            }
+        fun checkCoarseLocationPermission(context: Context) {
+            // おおよその位置情報
+            val accessCoarseLocationState =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+
+            updateLocationPermissionState(
+                LocationPermissionState::accessCoarseLocationState,
+                accessCoarseLocationState,
+            )
         }
 
-        private val _permissionDialogState = MutableStateFlow(PermissionDialogState())
-        val permissionDialogState: StateFlow<PermissionDialogState> = _permissionDialogState.asStateFlow()
-
-        fun showRequestLocationPermissionDialog(state: Boolean) {
-            _permissionDialogState.update {
-                _permissionDialogState.value.copy(
-                    showRequestLocationPermissionDialog = state,
-                )
-            }
+        fun checkFineLocationPermission(context: Context) {
+            // 正確な位置情報
+            val accessFineLocationState =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+            updateLocationPermissionState(
+                LocationPermissionState::accessFineLocationState,
+                accessFineLocationState,
+            )
         }
 
-        fun showUpgradeToPreciseLocationDialog(state: Boolean) {
-            _permissionDialogState.update {
-                _permissionDialogState.value.copy(
-                    showUpgradeToPreciseLocationDialog = state,
-                )
-            }
-        }
+        fun checkBackgroundLocationPermission(context: Context) {
+            // バックグラウンドでの位置情報
+            Log.d("result", "backgroudの許可")
+            val backgroundPermissionGranted =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
 
-        fun showRequestBackgroundPermissionDialog(state: Boolean) {
-            _permissionDialogState.update {
-                _permissionDialogState.value.copy(
-                    showRequestBackgroundPermissionDialog = state,
-                )
-            }
+            updateLocationPermissionState(
+                LocationPermissionState::backgroundPermissionGranted,
+                backgroundPermissionGranted,
+            )
         }
 
         // 位置情報の優先度の更新
