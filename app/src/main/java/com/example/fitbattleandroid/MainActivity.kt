@@ -88,11 +88,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         backgroundPermissionGranted.value = isBackgroundLocationPermissionGranted(this)
-
-        /* 位置情報の更新を開始
-        // TODO こっちの位置情報を使用して現在地をトラッキングする
-        locationViewModel.startLocationUpdates()
-         */
+        mapViewModel.startLocationUpdates()
     }
 
     override fun onPause() {

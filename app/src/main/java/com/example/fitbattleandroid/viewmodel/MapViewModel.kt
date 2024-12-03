@@ -3,12 +3,14 @@ package com.example.fitbattleandroid.viewmodel
 import android.Manifest
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitbattleandroid.MyApplication
@@ -16,6 +18,9 @@ import com.example.fitbattleandroid.model.GeofenceData
 import com.example.fitbattleandroid.model.LocationData
 import com.example.fitbattleandroid.receiver.GeofenceBroadcastReceiver
 import com.example.fitbattleandroid.repository.FetchGeoFenceInfoRepository
+import com.example.fitbattleandroid.ui.state.LocationPermissionState
+import com.example.fitbattleandroid.ui.state.MapScreenUiState
+import com.example.fitbattleandroid.ui.state.PermissionDialogState
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
@@ -31,8 +36,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.KProperty1
 
 private const val TAG = "MapViewModel"
 
@@ -74,38 +81,156 @@ class MapViewModel
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     for (location in locationResult.locations) {
+                        val updatedLatitude = location.latitude
+                        val updatedLongitude = location.longitude
+
                         _location.value =
                             _location.value.copy(
-                                latitude = location.latitude,
-                                longitude = location.longitude,
-                                priority = _location.value.priority,
+                                latitude = updatedLatitude,
+                                longitude = updatedLongitude,
                             )
                     }
                 }
             }
 
+        private val _mapScreenUiState = MutableStateFlow(MapScreenUiState())
+        val mapScreenUiState: StateFlow<MapScreenUiState> = _mapScreenUiState.asStateFlow()
+
+        // 権限の更新を反映
+        fun updateLocationPermissionState(
+            select: KProperty1<LocationPermissionState, Boolean>,
+            state: Boolean,
+        ) {
+            _mapScreenUiState.update { current ->
+                current.copy(
+                    locationPermissionState =
+                        current.locationPermissionState.let { currentPermissionState ->
+                            when (select) {
+                                LocationPermissionState::accessFineLocationState ->
+                                    currentPermissionState.copy(
+                                        accessFineLocationState = state,
+                                    )
+
+                                LocationPermissionState::accessCoarseLocationState ->
+                                    currentPermissionState.copy(
+                                        accessCoarseLocationState = state,
+                                    )
+
+                                LocationPermissionState::backgroundPermissionGranted ->
+                                    currentPermissionState.copy(
+                                        backgroundPermissionGranted = state,
+                                    )
+
+                                else -> throw IllegalArgumentException("Unknown select: $select")
+                            }
+                        },
+                )
+            }
+        }
+
+        // ダイアログの状態を更新
+        fun updatePermissionDialogState(
+            dialog: KProperty1<PermissionDialogState, Boolean>,
+            state: Boolean,
+        ) {
+            _mapScreenUiState.update { current ->
+                current.copy(
+                    permissionDialogState =
+                        current.permissionDialogState.let { currentPermissionDialogState ->
+                            when (dialog) {
+                                PermissionDialogState::showRequestLocationPermissionDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showRequestLocationPermissionDialog = state,
+                                    )
+
+                                PermissionDialogState::showUpgradeToPreciseLocationDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showUpgradeToPreciseLocationDialog = state,
+                                    )
+
+                                PermissionDialogState::showRequestBackgroundPermissionDialog ->
+                                    currentPermissionDialogState.copy(
+                                        showRequestBackgroundPermissionDialog = state,
+                                    )
+
+                                else -> throw IllegalArgumentException("Unknown dialog: $dialog")
+                            }
+                        },
+                )
+            }
+        }
+
+        fun checkCoarseLocationPermission(context: Context) {
+            // おおよその位置情報
+            val accessCoarseLocationState =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+
+            updateLocationPermissionState(
+                LocationPermissionState::accessCoarseLocationState,
+                accessCoarseLocationState,
+            )
+        }
+
+        fun checkFineLocationPermission(context: Context) {
+            // 正確な位置情報
+            val accessFineLocationState =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+            updateLocationPermissionState(
+                LocationPermissionState::accessFineLocationState,
+                accessFineLocationState,
+            )
+        }
+
+        fun checkBackgroundLocationPermission(context: Context) {
+            // バックグラウンドでの位置情報
+            Log.d("result", "backgroudの許可")
+            val backgroundPermissionGranted =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
+
+            updateLocationPermissionState(
+                LocationPermissionState::backgroundPermissionGranted,
+                backgroundPermissionGranted,
+            )
+        }
+
+        // 位置情報の優先度の更新
         fun updatePriority(priority: Int) {
             _location.value =
                 _location.value.copy(
                     priority = priority,
                 )
+            updateLocationRequest()
         /* priorityの確認
         Log.d("LocationViewModel", locationRequest.priority.toPriorityString())
          */
         }
 
-        fun updateLocationRequest() {
+        // 位置情報リクエストの更新
+        // 優先度や更新頻度などを変更した際に、このメソッドを呼び出して更新完了
+        private fun updateLocationRequest() {
             _locationRequest = createLocationRequest()
         }
 
-        // 　位置情報の設定
+        // 　位置情報リクエストの設定
+        // 利用可能な設定：https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
         private fun createLocationRequest(): LocationRequest =
             LocationRequest
-                .Builder(5000)
-                .setPriority(_location.value.priority)
+                .Builder(1000)
+                // .setPriority(_location.value.priority)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .build()
 
         // 位置情報の取得
+        // デバイスが最後に確認された場所の位置情報
         fun fetchLocation(): LocationData {
             try {
                 val result =
@@ -135,6 +260,7 @@ class MapViewModel
                         locationCallback,
                         Looper.getMainLooper(),
                     )
+                    isLocationUpdatesActive = true
                 } catch (e: SecurityException) {
                     Log.d(TAG, e.toString())
                 }
@@ -145,6 +271,7 @@ class MapViewModel
         fun stopLocationUpdates() {
             if (isLocationUpdatesActive) {
                 fusedLocationClient.removeLocationUpdates(locationCallback)
+                isLocationUpdatesActive = false
             }
         }
 
