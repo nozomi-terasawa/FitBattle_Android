@@ -31,10 +31,10 @@
             </intent-filter>
         </activity>
         <receiver
-            android:name=".receiver.GeofenceBroadcastReceiver"
+            android:name=".domain.receiver.GeofenceBroadcastReceiver"
             android:exported="false" />
         <receiver
-            android:name=".receiver.AlarmReceiver"
+            android:name=".domain.receiver.AlarmReceiver"
             android:exported="false" />
 
         <meta-data
@@ -43,7 +43,7 @@
 
         <!-- Android 13 -->
         <activity
-            android:name=".activity.PermissionsRationaleActivity"
+            android:name=".ui.activity.PermissionsRationaleActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
@@ -54,7 +54,7 @@
         <activity-alias
             android:name="ViewPermissionUsageActivity"
             android:exported="true"
-            android:targetActivity=".activity.PermissionsRationaleActivity"
+            android:targetActivity=".ui.activity.PermissionsRationaleActivity"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />

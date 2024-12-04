@@ -9,18 +9,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.fitbattleandroid.MyApplication
-import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
-import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.CommonOutlinedTextField
-import com.example.fitbattleandroid.ui.common.Header
-import com.example.fitbattleandroid.ui.common.MinText
-import com.example.fitbattleandroid.ui.common.NormalBottom
-import com.example.fitbattleandroid.ui.common.NormalText
-import com.example.fitbattleandroid.ui.common.TitleText
-import com.example.fitbattleandroid.ui.common.TransparentBottom
-import com.example.fitbattleandroid.viewmodel.AuthState
-import com.example.fitbattleandroid.viewmodel.AuthViewModel
-import com.example.fitbattleandroid.viewmodel.toUserCreateReq
+import com.example.fitbattleandroid.data.repositoryImpl.AuthRepositoryImpl
+import com.example.fitbattleandroid.ui.parts.common.Background
+import com.example.fitbattleandroid.ui.parts.common.CommonOutlinedTextField
+import com.example.fitbattleandroid.ui.parts.common.Header
+import com.example.fitbattleandroid.ui.parts.common.MinText
+import com.example.fitbattleandroid.ui.parts.common.NormalBottom
+import com.example.fitbattleandroid.ui.parts.common.NormalText
+import com.example.fitbattleandroid.ui.parts.common.TitleText
+import com.example.fitbattleandroid.ui.parts.common.TransparentBottom
+import com.example.fitbattleandroid.ui.viewmodel.AuthState
+import com.example.fitbattleandroid.ui.viewmodel.AuthViewModel
+import com.example.fitbattleandroid.ui.viewmodel.toUserCreateReq
 import kotlinx.coroutines.launch
 
 @Composable

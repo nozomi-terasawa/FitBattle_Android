@@ -1,7 +1,7 @@
 package com.example.fitbattleandroid.di
 
-import com.example.fitbattleandroid.repository.FetchGeoFenceInfoRepository
-import com.example.fitbattleandroid.repositoryImpl.FetchGeoFenceInfoRepositoryImpl
+import com.example.fitbattleandroid.data.repository.FetchGeoFenceInfoRepository
+import com.example.fitbattleandroid.data.repositoryImpl.FetchGeoFenceInfoRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

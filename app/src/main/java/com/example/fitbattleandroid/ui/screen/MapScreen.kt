@@ -26,19 +26,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import com.example.fitbattleandroid.data.remote.EntryGeoFenceReq
-import com.example.fitbattleandroid.model.LocationData
-import com.example.fitbattleandroid.ui.common.Header
-import com.example.fitbattleandroid.ui.dialog.RequestBackgroundLocationPermissionDialog
-import com.example.fitbattleandroid.ui.dialog.RequestLocationPermissionDialog
-import com.example.fitbattleandroid.ui.dialog.UpdateLocationPermissionDialog
-import com.example.fitbattleandroid.ui.map.CurrentLocationMarker
-import com.example.fitbattleandroid.ui.map.DeviceOrientationProvider
+import com.example.fitbattleandroid.data.api.dto.geofence.EntryGeoFenceReq
+import com.example.fitbattleandroid.domain.model.LocationData
+import com.example.fitbattleandroid.ui.parts.common.Header
+import com.example.fitbattleandroid.ui.parts.custom.dialog.RequestBackgroundLocationPermissionDialog
+import com.example.fitbattleandroid.ui.parts.custom.dialog.RequestLocationPermissionDialog
+import com.example.fitbattleandroid.ui.parts.custom.dialog.UpdateLocationPermissionDialog
+import com.example.fitbattleandroid.ui.parts.custom.map.CurrentLocationMarker
+import com.example.fitbattleandroid.ui.parts.custom.map.DeviceOrientationProvider
 import com.example.fitbattleandroid.ui.state.PermissionDialogState
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
-import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
-import com.example.fitbattleandroid.viewmodel.MapViewModel
+import com.example.fitbattleandroid.ui.viewmodel.GeofenceMapViewModel
+import com.example.fitbattleandroid.ui.viewmodel.MapViewModel
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
@@ -254,10 +254,11 @@ fun ShowMap(
     ) {
         CustomMarker(
             bearing = combinedBearing,
-            markerState = remember {
-                MarkerState(
-                    position = LatLng(currentLocation.latitude, currentLocation.longitude),
-                )
+            markerState =
+                remember {
+                    MarkerState(
+                        position = LatLng(currentLocation.latitude, currentLocation.longitude),
+                    )
                 },
         )
 

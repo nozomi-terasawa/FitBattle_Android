@@ -18,7 +18,7 @@ import androidx.health.connect.client.HealthConnectClient
 import com.example.fitbattleandroid.ui.navigation.App
 import com.example.fitbattleandroid.ui.screen.isBackgroundLocationPermissionGranted
 import com.example.fitbattleandroid.ui.theme.FitBattleAndroidTheme
-import com.example.fitbattleandroid.viewmodel.MapViewModel
+import com.example.fitbattleandroid.ui.viewmodel.MapViewModel
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest

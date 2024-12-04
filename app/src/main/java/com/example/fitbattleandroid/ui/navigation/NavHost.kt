@@ -32,9 +32,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fitbattleandroid.MyApplication
-import com.example.fitbattleandroid.data.EncounterRemoteDatasource
-import com.example.fitbattleandroid.repositoryImpl.AuthRepositoryImpl
-import com.example.fitbattleandroid.repositoryImpl.GeofenceEntryRepositoryImpl
+import com.example.fitbattleandroid.data.remote.EncounterRemoteDatasource
+import com.example.fitbattleandroid.data.repositoryImpl.AuthRepositoryImpl
+import com.example.fitbattleandroid.data.repositoryImpl.GeofenceEntryRepositoryImpl
 import com.example.fitbattleandroid.ui.screen.EncounterHistoryScreen
 import com.example.fitbattleandroid.ui.screen.FitnessMemory
 import com.example.fitbattleandroid.ui.screen.LocationRationaleScreen
@@ -42,11 +42,11 @@ import com.example.fitbattleandroid.ui.screen.LoginScreen
 import com.example.fitbattleandroid.ui.screen.MapScreen
 import com.example.fitbattleandroid.ui.screen.RegistrationScreen
 import com.example.fitbattleandroid.ui.theme.primaryContainerDarkMediumContrast
-import com.example.fitbattleandroid.viewmodel.AlarmViewModel
-import com.example.fitbattleandroid.viewmodel.AuthViewModel
-import com.example.fitbattleandroid.viewmodel.GeofenceMapViewModel
-import com.example.fitbattleandroid.viewmodel.HealthConnectViewModel
-import com.example.fitbattleandroid.viewmodel.MapViewModel
+import com.example.fitbattleandroid.ui.viewmodel.AlarmViewModel
+import com.example.fitbattleandroid.ui.viewmodel.AuthViewModel
+import com.example.fitbattleandroid.ui.viewmodel.GeofenceMapViewModel
+import com.example.fitbattleandroid.ui.viewmodel.HealthConnectViewModel
+import com.example.fitbattleandroid.ui.viewmodel.MapViewModel
 import com.websarva.wings.android.myapplication.TopScreen
 
 sealed class Screen(

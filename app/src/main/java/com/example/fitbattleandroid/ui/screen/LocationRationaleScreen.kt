@@ -23,9 +23,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fitbattleandroid.R
-import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Header
-import com.example.fitbattleandroid.ui.common.NormalBottom
+import com.example.fitbattleandroid.ui.parts.common.Background
+import com.example.fitbattleandroid.ui.parts.common.Header
+import com.example.fitbattleandroid.ui.parts.common.NormalBottom
 
 @Composable
 fun LocationRationaleScreen(

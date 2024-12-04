@@ -12,10 +12,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.fitbattleandroid.R
-import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Header
-import com.example.fitbattleandroid.ui.common.NormalBottom
-import com.example.fitbattleandroid.ui.common.NormalText
+import com.example.fitbattleandroid.ui.parts.common.Background
+import com.example.fitbattleandroid.ui.parts.common.Header
+import com.example.fitbattleandroid.ui.parts.common.NormalBottom
+import com.example.fitbattleandroid.ui.parts.common.NormalText
 
 @Composable
 fun TopScreen(navController: NavController) {

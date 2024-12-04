@@ -28,13 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-import com.example.fitbattleandroid.data.remote.MemberInfo
-import com.example.fitbattleandroid.ui.common.Background
-import com.example.fitbattleandroid.ui.common.Header
+import com.example.fitbattleandroid.data.api.dto.geofence.MemberInfo
+import com.example.fitbattleandroid.ui.parts.common.Background
+import com.example.fitbattleandroid.ui.parts.common.Header
 import com.example.fitbattleandroid.ui.theme.inversePrimaryLight
 import com.example.fitbattleandroid.ui.theme.onPrimaryDark
 import com.example.fitbattleandroid.ui.theme.primaryContainerLight
-import com.example.fitbattleandroid.viewmodel.GeofenceEntryState
+import com.example.fitbattleandroid.ui.viewmodel.GeofenceEntryState
 
 @Composable
 fun EncounterHistoryScreen(

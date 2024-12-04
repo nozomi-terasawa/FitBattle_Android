@@ -3,7 +3,7 @@ package com.example.fitbattleandroid
 import android.app.Application
 import android.app.NotificationManager
 import android.os.Build
-import com.example.fitbattleandroid.notification.createNotificationChannels
+import com.example.fitbattleandroid.ui.notification.createNotificationChannels
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
